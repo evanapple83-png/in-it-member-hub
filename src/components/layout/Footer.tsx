@@ -52,6 +52,7 @@ export async function Footer() {
               <KeyRound className="h-4 w-4 text-date" />
               {approvedMember ? "Contact the community team" : "Invite required to enter"}
             </Link>
+            <Link href="/privacy">Privacy policy</Link>
           </div>
         </div>
       </div>
