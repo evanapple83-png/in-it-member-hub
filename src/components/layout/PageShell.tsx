@@ -15,7 +15,7 @@ export function PageShell({
   description?: string;
 }) {
   return (
-    <section className={cn("relative overflow-hidden px-4 py-10 sm:px-6 lg:px-8", className)}>
+    <section className={cn("relative overflow-hidden px-4 pb-10 pt-32 sm:px-6 sm:pt-36 lg:px-8 lg:pt-40", className)}>
       <CulturalPattern />
       <div className="relative mx-auto max-w-7xl">
         {title ? (
