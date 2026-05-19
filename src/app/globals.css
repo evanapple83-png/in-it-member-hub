@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fbf8f2;
+  --foreground: #17202a;
+  --sand: #ead8bd;
+  --warm-cream: #f6ead9;
+  --date: #6f2637;
+  --gold: #cda357;
+  --deep-blue: #10365c;
+  --dutch-blue: #6ea7d8;
+  --charcoal: #17202a;
+  --off-white: #fbf8f2;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-sand: var(--sand);
+  --color-warm-cream: var(--warm-cream);
+  --color-date: var(--date);
+  --color-gold: var(--gold);
+  --color-deep-blue: var(--deep-blue);
+  --color-dutch-blue: var(--dutch-blue);
+  --color-charcoal: var(--charcoal);
+  --color-off-white: var(--off-white);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--gold) 42%, transparent);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.ornamental-divider {
+  background:
+    linear-gradient(90deg, transparent, rgba(205, 163, 87, 0.85), transparent),
+    radial-gradient(circle, rgba(111, 38, 55, 0.6) 0 2px, transparent 3px);
+  background-position:
+    center,
+    center;
+  background-size:
+    100% 1px,
+    18px 18px;
+}
+
+.soft-card {
+  border: 1px solid rgba(23, 32, 42, 0.1);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 24px 80px rgba(16, 54, 92, 0.1);
+  backdrop-filter: blur(18px);
+}
