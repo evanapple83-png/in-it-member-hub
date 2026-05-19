@@ -31,7 +31,7 @@ export async function Navbar() {
   const admin = await isAdmin(session?.user?.id);
   const navItems = approvedMember
     ? [...privateNavItems, ...(admin ? [{ href: "/admin", label: "Admin" }] : [])]
-    : publicNavItems;
+    : [...publicNavItems, ...(admin ? [{ href: "/admin", label: "Admin" }] : [])];
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 bg-transparent px-4 pt-4 sm:px-6 lg:px-8">
