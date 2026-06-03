@@ -1,6 +1,8 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/db";
 import { communities, communityMemberships, communityPosts, members } from "@/db/schema";
+import { uniqueSlug } from "@/lib/slug";
+import { slugify } from "@/lib/utils";
 import type { CommunityMemberSummary, CommunityPost } from "@/lib/types";
 
 export type Community = {
@@ -179,4 +181,62 @@ export async function setCommunityPostStatus(postId: string, status: "published"
 export async function deleteCommunityPost(postId: string) {
   const db = getDb();
   await db.delete(communityPosts).where(eq(communityPosts.id, postId));
+}
+
+// --- Admin beheer (niet in FRD: communities aanmaken/beheren, extra-wens Evan) ---
+
+export type CommunityAdminView = Community & { member_count: number };
+
+export async function listCommunitiesForAdmin(): Promise<CommunityAdminView[]> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: communities.id,
+      slug: communities.slug,
+      name: communities.name,
+      description: communities.description,
+      category: communities.category,
+      is_private: communities.isPrivate,
+      member_count: count(communityMemberships.id),
+    })
+    .from(communities)
+    .leftJoin(communityMemberships, eq(communityMemberships.communityId, communities.id))
+    .groupBy(communities.id)
+    .orderBy(asc(communities.category), asc(communities.name));
+  return rows;
+}
+
+export async function createCommunity(input: { name: string; description?: string | null; category?: string }) {
+  const db = getDb();
+  // Prefer a clean, readable slug (the slug is the community URL); fall back to a
+  // random-suffixed one only when the name is already taken.
+  const base = slugify(input.name).slice(0, 60);
+  const [taken] = base
+    ? await db.select({ id: communities.id }).from(communities).where(eq(communities.slug, base)).limit(1)
+    : [undefined];
+  const slug = base && !taken ? base : uniqueSlug(input.name, "community");
+  const [row] = await db
+    .insert(communities)
+    .values({ slug, name: input.name, description: input.description ?? null, category: input.category ?? "professional" })
+    .returning();
+  return row;
+}
+
+export async function updateCommunity(
+  id: string,
+  patch: { name?: string; description?: string | null; category?: string },
+) {
+  const db = getDb();
+  const [row] = await db
+    .update(communities)
+    .set({ ...patch, updatedAt: new Date() })
+    .where(eq(communities.id, id))
+    .returning();
+  return row ?? null;
+}
+
+// Verwijdert ook alle lidmaatschappen en posts in de community (on delete cascade).
+export async function deleteCommunity(id: string) {
+  const db = getDb();
+  await db.delete(communities).where(eq(communities.id, id));
 }

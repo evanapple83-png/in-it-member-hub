@@ -100,6 +100,9 @@ export function AdminClient({ view }: { view: "dashboard" | "members" | "pending
           <Link href="/admin/events">Activities</Link>
         </Button>
         <Button asChild variant="outline">
+          <Link href="/admin/communities">Communities</Link>
+        </Button>
+        <Button asChild variant="outline">
           <Link href="/admin/import">CSV import</Link>
         </Button>
       </div>

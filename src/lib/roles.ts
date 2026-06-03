@@ -12,7 +12,8 @@ export type AdminCapability =
   | "review_access" // FR-005: beoordelen toegangsaanvragen
   | "manage_activities" // FR-024: activiteiten beheren (coordinator-only in spec)
   | "moderate" // FR-015: content/profiel moderatie
-  | "manage_users"; // FR-016/019: gebruikersbeheer
+  | "manage_users" // FR-016/019: gebruikersbeheer
+  | "manage_communities"; // Niet in FRD: communities aanmaken/beheren (extra-wens Evan)
 
 // Returns the capabilities a role holds, or `null` for "all capabilities".
 // Today both roles map to null (combined coordinator+beheerder). To split the roles,
