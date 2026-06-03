@@ -24,7 +24,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
 const postSchema = z.object({ body: z.string().min(1).max(4000) });
 
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  if (!hasDatabase()) return NextResponse.json({ error: "Database not configured." }, { status: 503 });
+  if (!hasDatabase()) return NextResponse.json({ error: "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw." }, { status: 503 });
   const member = await getApprovedCurrentMember();
   if (!member) return NextResponse.json({ error: "Alleen geautoriseerde leden kunnen plaatsen." }, { status: 403 });
 

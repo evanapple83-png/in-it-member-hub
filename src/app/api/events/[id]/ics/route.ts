@@ -13,7 +13,7 @@ function escapeIcs(value: string) {
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!hasDatabase()) return NextResponse.json({ error: "Database not configured." }, { status: 503 });
+  if (!hasDatabase()) return NextResponse.json({ error: "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw." }, { status: 503 });
   if (!(await isApprovedMember())) return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
 
   const { id } = await params;

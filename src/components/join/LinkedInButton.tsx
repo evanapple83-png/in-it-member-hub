@@ -15,7 +15,7 @@ export function LinkedInButton({ label = "Continue with LinkedIn", disabled = fa
     try {
       await signIn("linkedin", { callbackUrl: "/onboarding" });
     } catch {
-      setError("LinkedIn login is not configured yet. Add Auth.js and LinkedIn environment variables.");
+      setError("LinkedIn login is temporarily unavailable. Please try again later or contact the coordinator.");
       setLoading(false);
     }
   }

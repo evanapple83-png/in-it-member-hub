@@ -41,7 +41,7 @@ export function AdminClient({ view }: { view: "dashboard" | "members" | "pending
         setStatus("ready");
       } catch {
         setStatus("unauthorized");
-        setError("Admin protection is active. Configure Neon, Auth.js and sign in as an admin.");
+        setError("This area is protected. Sign in with an admin account to continue.");
       }
     }
     load();

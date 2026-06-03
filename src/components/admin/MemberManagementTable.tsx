@@ -29,7 +29,7 @@ export function MemberManagementTable({
     });
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
-      setError(body.error ?? "Admin action failed. Configure Neon, Auth.js and admin access.");
+      setError(body.error ?? "Action failed. Sign in with an admin account and try again.");
       return;
     }
     const result = await response.json().catch(() => ({}));

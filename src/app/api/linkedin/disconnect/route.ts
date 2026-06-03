@@ -7,7 +7,7 @@ import { authOptions } from "@/lib/auth";
 
 export async function POST() {
   if (!hasDatabase()) {
-    return NextResponse.json({ error: "Neon DATABASE_URL is not configured." }, { status: 503 });
+    return NextResponse.json({ error: "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw." }, { status: 503 });
   }
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {

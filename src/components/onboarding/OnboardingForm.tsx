@@ -64,7 +64,7 @@ export function OnboardingForm() {
   const [error, setError] = useState<string | null>(null);
   const { data: session, status: sessionStatus } = useSession();
   const sessionError =
-    sessionStatus !== "loading" && !session?.user ? "Onboarding incomplete: sign in with LinkedIn first, or configure Auth.js." : null;
+    sessionStatus !== "loading" && !session?.user ? "Sign in with LinkedIn first to complete your profile." : null;
 
   useEffect(() => {
     if (!session?.user) return;
@@ -163,7 +163,7 @@ export function OnboardingForm() {
       if (!response.ok) throw new Error(body.error ?? "Upload failed.");
       setForm((current) => ({ ...current, photo_url: body.url }));
     } catch {
-      setError("Photo upload failed. Check the Vercel Blob token and upload limits.");
+      setError("Photo upload failed. Try a smaller image or try again in a moment.");
     }
   }
 
@@ -196,7 +196,7 @@ export function OnboardingForm() {
           <>
             <div className="inline-flex w-fit items-center gap-2 rounded-full bg-dutch-blue/12 px-3 py-1 text-xs font-bold text-deep-blue">
               <Link2 className="h-3.5 w-3.5" />
-              LinkedIn connected when Auth.js session exists
+              {session?.user ? "Connected to your LinkedIn account" : "Sign in with LinkedIn to get started"}
             </div>
             <Field label="Full name" value={form.full_name} onChange={(value) => setForm({ ...form, full_name: value })} />
             <Field label="Email" type="email" value={form.email} onChange={(value) => setForm({ ...form, email: value })} />

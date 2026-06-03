@@ -8,7 +8,7 @@ import { adminCan } from "@/lib/roles";
 
 // Admin (beheerder) moderates any post; an author may remove their own.
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!hasDatabase()) return NextResponse.json({ error: "Database not configured." }, { status: 503 });
+  if (!hasDatabase()) return NextResponse.json({ error: "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw." }, { status: 503 });
   const role = await getCurrentAdminRole();
   if (role === null || !adminCan(role, "moderate")) {
     return NextResponse.json({ error: "Alleen een beheerder mag modereren." }, { status: 403 });
@@ -23,7 +23,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!hasDatabase()) return NextResponse.json({ error: "Database not configured." }, { status: 503 });
+  if (!hasDatabase()) return NextResponse.json({ error: "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw." }, { status: 503 });
 
   const { id } = await params;
   const [member, role, post] = await Promise.all([getApprovedCurrentMember(), getCurrentAdminRole(), getCommunityPost(id)]);

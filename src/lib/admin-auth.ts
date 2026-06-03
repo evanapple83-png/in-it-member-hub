@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 
 export async function requireAdminFromRequest() {
   if (!hasDatabase()) {
-    return { ok: false as const, error: "Neon DATABASE_URL is not configured.", status: 503 };
+    return { ok: false as const, error: "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw.", status: 503 };
   }
 
   const session = await getServerSession(authOptions);

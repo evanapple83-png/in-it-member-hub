@@ -8,7 +8,7 @@ import { authOptions } from "@/lib/auth";
 
 // AVG §9.1 inzage: alle gegevens die we van het lid bewaren als downloadbare JSON.
 export async function GET() {
-  if (!hasDatabase()) return NextResponse.json({ error: "Database not configured." }, { status: 503 });
+  if (!hasDatabase()) return NextResponse.json({ error: "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw." }, { status: 503 });
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Log eerst in." }, { status: 401 });
 

@@ -23,7 +23,7 @@ const patchSchema = z.object({
 });
 
 export async function PATCH(request: Request) {
-  if (!hasDatabase()) return NextResponse.json({ error: "Database not configured." }, { status: 503 });
+  if (!hasDatabase()) return NextResponse.json({ error: "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw." }, { status: 503 });
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Log eerst in." }, { status: 401 });
 
@@ -47,7 +47,7 @@ export async function PATCH(request: Request) {
 // FK-gedrag ruimt de rest op: memberships/RSVP's cascaden mee, geschreven posts blijven
 // staan als "Verwijderd lid" (author set null), voordrachten verliezen de verwijzing.
 export async function DELETE() {
-  if (!hasDatabase()) return NextResponse.json({ error: "Database not configured." }, { status: 503 });
+  if (!hasDatabase()) return NextResponse.json({ error: "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw." }, { status: 503 });
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Log eerst in." }, { status: 401 });
 

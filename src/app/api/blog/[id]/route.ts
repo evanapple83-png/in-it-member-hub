@@ -17,7 +17,7 @@ const patchSchema = z.object({
 
 // Author edits their own post; beheerder moderates (hide/show) and picks the Showcase van de week.
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!hasDatabase()) return NextResponse.json({ error: "Database not configured." }, { status: 503 });
+  if (!hasDatabase()) return NextResponse.json({ error: "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw." }, { status: 503 });
 
   const { id } = await params;
   const [member, role, post] = await Promise.all([getApprovedCurrentMember(), getCurrentAdminRole(), getBlogPostById(id)]);
@@ -54,7 +54,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!hasDatabase()) return NextResponse.json({ error: "Database not configured." }, { status: 503 });
+  if (!hasDatabase()) return NextResponse.json({ error: "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw." }, { status: 503 });
 
   const { id } = await params;
   const [member, role, post] = await Promise.all([getApprovedCurrentMember(), getCurrentAdminRole(), getBlogPostById(id)]);

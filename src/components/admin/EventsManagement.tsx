@@ -67,7 +67,7 @@ export function EventsManagement() {
         await load();
       } catch {
         setState("unauthorized");
-        setError("Activiteitenbeheer is beveiligd. Configureer Neon en log in als coordinator.");
+        setError("Activiteitenbeheer is beveiligd. Log in als coordinator om verder te gaan.");
       }
     }
     void init();
