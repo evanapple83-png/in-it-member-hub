@@ -1,5 +1,5 @@
-import type { MemberRow, NewMemberRow } from "@/db/schema";
-import type { Member } from "@/lib/types";
+import type { AccessRequestRow, EventRow, MemberRow, NewMemberRow } from "@/db/schema";
+import type { AccessRequest, CommunityEvent, Member } from "@/lib/types";
 
 export function memberFromRow(row: MemberRow): Member {
   return {
@@ -22,6 +22,9 @@ export function memberFromRow(row: MemberRow): Member {
     open_to_opportunities: row.openToOpportunities,
     open_to_collaborate: row.openToCollaborate,
     open_to_speaking: row.openToSpeaking,
+    member_type: row.memberType as Member["member_type"],
+    public_fields: row.publicFields,
+    email_opt_out: row.emailOptOut,
     visibility_status: row.visibilityStatus as Member["visibility_status"],
     consent_given: row.consentGiven,
     onboarding_completed: row.onboardingCompleted,
@@ -51,9 +54,53 @@ export function memberToInsert(member: Partial<Member> & Pick<Member, "full_name
     openToOpportunities: member.open_to_opportunities ?? false,
     openToCollaborate: member.open_to_collaborate ?? false,
     openToSpeaking: member.open_to_speaking ?? false,
+    memberType: member.member_type ?? "member",
+    publicFields: member.public_fields ?? [],
+    emailOptOut: member.email_opt_out ?? false,
     visibilityStatus: member.visibility_status ?? "pending",
     consentGiven: member.consent_given ?? false,
     onboardingCompleted: member.onboarding_completed ?? false,
     authProvider: member.auth_provider ?? "linkedin",
+  };
+}
+
+export function eventFromRow(row: EventRow): CommunityEvent {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    description: row.description,
+    location: row.location,
+    starts_at: row.startsAt.toISOString(),
+    ends_at: row.endsAt?.toISOString() ?? null,
+    category: row.category,
+    meet_link: row.meetLink,
+    calendar_link: row.calendarLink,
+    google_event_id: row.googleEventId,
+    cover_image_url: row.coverImageUrl,
+    status: row.status as CommunityEvent["status"],
+    audience: row.audience,
+    created_at: row.createdAt.toISOString(),
+    updated_at: row.updatedAt.toISOString(),
+  };
+}
+
+export function accessRequestFromRow(row: AccessRequestRow): AccessRequest {
+  return {
+    id: row.id,
+    full_name: row.fullName,
+    email: row.email,
+    phone: row.phone,
+    requester_type: row.requesterType as AccessRequest["requester_type"],
+    motivation: row.motivation,
+    linkedin_url: row.linkedinUrl,
+    proposed_by_member_id: row.proposedByMemberId,
+    status: row.status as AccessRequest["status"],
+    review_note: row.reviewNote,
+    reviewed_by_admin_id: row.reviewedByAdminId,
+    reviewed_at: row.reviewedAt?.toISOString() ?? null,
+    invite_id: row.inviteId,
+    created_at: row.createdAt.toISOString(),
+    updated_at: row.updatedAt.toISOString(),
   };
 }

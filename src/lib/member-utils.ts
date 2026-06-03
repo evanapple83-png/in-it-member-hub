@@ -1,4 +1,28 @@
-import type { Member, MemberSort } from "@/lib/types";
+import type { Member, MemberSort, PublicFieldKey } from "@/lib/types";
+
+// BP-004 / FR-012/013: the fields a member can individually opt into showing on their
+// public profile page. Name is always shown once a public profile is enabled.
+export const PUBLIC_FIELD_OPTIONS: { key: PublicFieldKey; label: string }[] = [
+  { key: "photo_url", label: "Profielfoto" },
+  { key: "headline", label: "Headline" },
+  { key: "role", label: "Functie" },
+  { key: "company", label: "Bedrijf" },
+  { key: "location", label: "Locatie" },
+  { key: "about", label: "Over mij" },
+  { key: "skills", label: "Skills" },
+  { key: "can_help_with", label: "Kan helpen met" },
+  { key: "languages", label: "Talen" },
+  { key: "linkedin_url", label: "LinkedIn-link" },
+];
+
+// A profile is publicly viewable only when approved, consented, and at least one field is shared.
+export function hasPublicProfile(member: Member) {
+  return member.visibility_status === "approved" && member.consent_given && member.public_fields.length > 0;
+}
+
+export function isFieldPublic(member: Member, key: PublicFieldKey) {
+  return member.public_fields.includes(key);
+}
 
 const searchableFields = (member: Member) =>
   [

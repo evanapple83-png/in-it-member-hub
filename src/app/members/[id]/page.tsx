@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { MemberBadges } from "@/components/members/MemberBadges";
 import { MemberCard } from "@/components/members/MemberCard";
 import { SkillChips } from "@/components/members/SkillChips";
+import { ExternalLink } from "lucide-react";
 import { getPublicMember, getPublicMembers } from "@/lib/members";
 import { isApprovedMember } from "@/lib/access";
-import { similarMembers } from "@/lib/member-utils";
+import { hasPublicProfile, similarMembers } from "@/lib/member-utils";
 import { initials } from "@/lib/utils";
 
 export default async function MemberProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -61,6 +62,14 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
                       <Link2 className="h-4 w-4" />
                       Connect on LinkedIn
                     </a>
+                  </Button>
+                ) : null}
+                {hasPublicProfile(member) ? (
+                  <Button asChild variant="outline">
+                    <Link href={`/p/${member.id}`}>
+                      <ExternalLink className="h-4 w-4" />
+                      Public profile
+                    </Link>
                   </Button>
                 ) : null}
               </div>

@@ -29,6 +29,17 @@ export async function getPublicMember(id: string): Promise<Member | null> {
   return members.find((member) => member.id === id) ?? null;
 }
 
+// FR-002/013: a profile visible to non-logged-in visitors — only when the member opted in
+// (approved + consent + at least one public field). The page renders only public fields.
+export async function getPublicProfile(id: string): Promise<Member | null> {
+  const member = await getPublicMember(id);
+  // getPublicMember already filters on approved+consent; re-assert it here so the public
+  // page never depends on an upstream filter staying unchanged (defense in depth).
+  if (!member || member.visibility_status !== "approved" || !member.consent_given) return null;
+  if (member.public_fields.length === 0) return null;
+  return member;
+}
+
 export async function getAllMembersForAdmin(): Promise<Member[]> {
   if (!hasDatabase()) {
     return seedMembers;

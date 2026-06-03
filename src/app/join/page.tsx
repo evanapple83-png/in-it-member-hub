@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { KeyRound, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { InviteGate } from "@/components/join/InviteGate";
 import { PageShell } from "@/components/layout/PageShell";
@@ -36,6 +37,13 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
             ) : null}
             <InviteGate initialCode={params.code ?? ""} />
             <p className="mt-4 max-w-2xl text-sm leading-6 text-charcoal/58">
+              No invite code yet?{" "}
+              <Link href="/request-access" className="font-bold text-deep-blue underline-offset-2 hover:underline">
+                Request access
+              </Link>{" "}
+              and the coordinator will review your request.
+            </p>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-charcoal/58">
               LinkedIn is used only for authentication and basic profile prefill. No scraping, no connection import and no bulk LinkedIn profile import are implemented.
             </p>
           </div>

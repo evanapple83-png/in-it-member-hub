@@ -7,7 +7,8 @@ import { requireAdminFromRequest } from "@/lib/admin-auth";
 
 const memberPatchSchema = z
   .object({
-    visibility_status: z.enum(["pending", "approved", "hidden", "rejected"]).optional(),
+    visibility_status: z.enum(["pending", "approved", "hidden", "rejected", "deactivated"]).optional(),
+    member_type: z.enum(["member", "friend"]).optional(),
     full_name: z.string().min(2).optional(),
     email: z.string().email().optional(),
     linkedin_url: z.string().nullable().optional(),
@@ -40,6 +41,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .update(members)
     .set({
       ...(changes.visibility_status ? { visibilityStatus: changes.visibility_status } : {}),
+      ...(changes.member_type ? { memberType: changes.member_type } : {}),
       ...(changes.full_name ? { fullName: changes.full_name } : {}),
       ...(changes.email ? { email: changes.email } : {}),
       ...(changes.linkedin_url !== undefined ? { linkedinUrl: changes.linkedin_url || null } : {}),

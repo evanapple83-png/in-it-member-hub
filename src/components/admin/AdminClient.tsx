@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { ShieldAlert } from "lucide-react";
+import { AccessRequestsClient } from "@/components/admin/AccessRequestsClient";
 import { AdminStats } from "@/components/admin/AdminStats";
 import { CsvImport } from "@/components/admin/CsvImport";
 import { InviteManagement } from "@/components/admin/InviteManagement";
@@ -14,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import type { Member } from "@/lib/types";
 
-export function AdminClient({ view }: { view: "dashboard" | "members" | "pending" | "import" | "invites" }) {
+export function AdminClient({ view }: { view: "dashboard" | "members" | "pending" | "import" | "invites" | "requests" }) {
   const [members, setMembers] = useState<Member[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "unauthorized">("loading");
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +76,7 @@ export function AdminClient({ view }: { view: "dashboard" | "members" | "pending
 
   if (view === "import") return <CsvImport />;
   if (view === "invites") return <InviteManagement />;
+  if (view === "requests") return <AccessRequestsClient />;
   if (view === "members") return <MemberManagementTable members={members} />;
   if (view === "pending") return <PendingMembersTable members={pending} />;
 
@@ -83,6 +85,9 @@ export function AdminClient({ view }: { view: "dashboard" | "members" | "pending
       <AdminStats members={members} />
       <div className="flex flex-wrap gap-3">
         <Button asChild>
+          <Link href="/admin/requests">Access requests</Link>
+        </Button>
+        <Button asChild variant="outline">
           <Link href="/admin/members/pending">Pending approvals</Link>
         </Button>
         <Button asChild variant="outline">
@@ -90,6 +95,9 @@ export function AdminClient({ view }: { view: "dashboard" | "members" | "pending
         </Button>
         <Button asChild variant="outline">
           <Link href="/admin/invites">Invite codes</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/admin/events">Activities</Link>
         </Button>
         <Button asChild variant="outline">
           <Link href="/admin/import">CSV import</Link>

@@ -7,6 +7,7 @@ import { CheckCircle2, Link2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { TagInput } from "@/components/onboarding/TagInput";
+import { PUBLIC_FIELD_OPTIONS } from "@/lib/member-utils";
 import type { Member } from "@/lib/types";
 
 type FormState = Pick<
@@ -28,6 +29,7 @@ type FormState = Pick<
   | "open_to_opportunities"
   | "open_to_collaborate"
   | "open_to_speaking"
+  | "public_fields"
   | "consent_given"
 >;
 
@@ -49,12 +51,14 @@ const emptyForm: FormState = {
   open_to_opportunities: false,
   open_to_collaborate: false,
   open_to_speaking: false,
+  public_fields: [],
   consent_given: false,
 };
 
 export function OnboardingForm() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [publicEnabled, setPublicEnabled] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "success">("idle");
   const [error, setError] = useState<string | null>(null);
   const { data: session, status: sessionStatus } = useSession();
@@ -64,15 +68,57 @@ export function OnboardingForm() {
   useEffect(() => {
     if (!session?.user) return;
     const timeout = window.setTimeout(() => {
+      // Only fill what is still empty: the /api/me hydration below is the source
+      // of truth for existing members and must not be clobbered by session data.
       setForm((current) => ({
         ...current,
-        full_name: session.user.name || current.full_name,
-        email: session.user.email || current.email,
-        photo_url: session.user.image || current.photo_url,
+        full_name: current.full_name || session.user.name || "",
+        email: current.email || session.user.email || "",
+        photo_url: current.photo_url || session.user.image || "",
       }));
     }, 0);
     return () => window.clearTimeout(timeout);
   }, [session]);
+
+  // Hydrate the form with the member's stored profile (when it exists), so editing
+  // via /profile starts from the saved values instead of an empty form that would
+  // overwrite everything (incl. public_fields) on save.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const response = await fetch("/api/me").catch(() => null);
+      if (!response?.ok) return;
+      const data = await response.json().catch(() => ({}));
+      const member: Member | null = data?.member ?? null;
+      if (!member || cancelled) return;
+      setForm((current) => ({
+        ...current,
+        full_name: member.full_name || current.full_name,
+        email: member.email || current.email,
+        linkedin_url: member.linkedin_url ?? current.linkedin_url,
+        photo_url: member.photo_url ?? current.photo_url,
+        headline: member.headline ?? current.headline,
+        role: member.role ?? current.role,
+        company: member.company ?? current.company,
+        location: member.location ?? current.location,
+        about: member.about ?? current.about,
+        skills: member.skills?.length ? member.skills : current.skills,
+        can_help_with: member.can_help_with?.length ? member.can_help_with : current.can_help_with,
+        looking_for: member.looking_for?.length ? member.looking_for : current.looking_for,
+        languages: member.languages?.length ? member.languages : current.languages,
+        open_to_mentor: member.open_to_mentor,
+        open_to_opportunities: member.open_to_opportunities,
+        open_to_collaborate: member.open_to_collaborate,
+        open_to_speaking: member.open_to_speaking,
+        public_fields: member.public_fields ?? current.public_fields,
+        consent_given: member.consent_given || current.consent_given,
+      }));
+      if ((member.public_fields ?? []).length > 0) setPublicEnabled(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const progress = useMemo(() => Math.round(((step + 1) / 3) * 100), [step]);
 
@@ -210,6 +256,45 @@ export function OnboardingForm() {
                   {label}
                 </label>
               ))}
+            </div>
+            <div className="rounded-2xl border border-charcoal/12 bg-white/70 p-4">
+              <label className="flex items-start gap-3 text-sm font-bold leading-6 text-charcoal">
+                <input
+                  type="checkbox"
+                  checked={publicEnabled}
+                  onChange={(event) => {
+                    setPublicEnabled(event.target.checked);
+                    if (!event.target.checked) setForm({ ...form, public_fields: [] });
+                  }}
+                  className="mt-1"
+                />
+                Maak een publieke profielpagina beschikbaar (optioneel)
+              </label>
+              <p className="mt-2 text-xs leading-5 text-charcoal/55">
+                Niet-ingelogde bezoekers zien dan alleen de velden die je hieronder zelf aanvinkt. Je naam wordt altijd
+                getoond. Laat dit uit om volledig besloten te blijven.
+              </p>
+              {publicEnabled ? (
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  {PUBLIC_FIELD_OPTIONS.map(({ key, label }) => (
+                    <label key={key} className="flex items-center gap-3 rounded-xl bg-sand/30 p-2.5 text-sm font-semibold text-charcoal">
+                      <input
+                        type="checkbox"
+                        checked={form.public_fields.includes(key)}
+                        onChange={(event) =>
+                          setForm({
+                            ...form,
+                            public_fields: event.target.checked
+                              ? [...form.public_fields, key]
+                              : form.public_fields.filter((field) => field !== key),
+                          })
+                        }
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              ) : null}
             </div>
             <label className="flex items-start gap-3 rounded-2xl border border-date/18 bg-date/5 p-4 text-sm font-semibold leading-6 text-charcoal">
               <input

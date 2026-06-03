@@ -24,6 +24,12 @@ const onboardingSchema = z.object({
   open_to_opportunities: z.boolean().default(false),
   open_to_collaborate: z.boolean().default(false),
   open_to_speaking: z.boolean().default(false),
+  // Whitelist: only known PublicFieldKey values may be stored (BP-004)
+  public_fields: z
+    .array(
+      z.enum(["photo_url", "headline", "role", "company", "location", "about", "skills", "can_help_with", "languages", "linkedin_url"]),
+    )
+    .default([]),
   consent_given: z.literal(true),
 });
 
@@ -62,6 +68,7 @@ export async function POST(request: Request) {
     openToOpportunities: payload.data.open_to_opportunities,
     openToCollaborate: payload.data.open_to_collaborate,
     openToSpeaking: payload.data.open_to_speaking,
+    publicFields: payload.data.public_fields,
     visibilityStatus: "pending",
     consentGiven: true,
     onboardingCompleted: true,

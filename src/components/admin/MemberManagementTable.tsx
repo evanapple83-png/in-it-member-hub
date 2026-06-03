@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, EyeOff, Pencil, Save, Trash2, X } from "lucide-react";
+import { Ban, Check, EyeOff, Pencil, Save, Trash2, X } from "lucide-react";
 import { Input, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { Member } from "@/lib/types";
@@ -57,13 +57,26 @@ export function MemberManagementTable({
             {items.map((member) => (
               <tr key={member.id} className="border-t border-charcoal/8">
                 <td className="p-4">
-                  <p className="font-black text-charcoal">{member.full_name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-black text-charcoal">{member.full_name}</p>
+                    <span className="rounded-full bg-gold/20 px-2 py-0.5 text-[11px] font-bold text-charcoal/70">
+                      {member.member_type === "friend" ? "Vriend" : "Lid"}
+                    </span>
+                  </div>
                   <p className="text-charcoal/55">{member.email}</p>
                 </td>
                 <td className="p-4">{member.role}</td>
                 <td className="p-4">{member.location}</td>
                 <td className="p-4">
-                  <span className="rounded-full bg-dutch-blue/12 px-3 py-1 text-xs font-bold text-deep-blue">{member.visibility_status}</span>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-bold ${
+                      member.visibility_status === "deactivated"
+                        ? "bg-date/12 text-date"
+                        : "bg-dutch-blue/12 text-deep-blue"
+                    }`}
+                  >
+                    {member.visibility_status}
+                  </span>
                 </td>
                 <td className="p-4">{member.consent_given ? "Yes" : "No"}</td>
                 <td className="p-4">
@@ -76,6 +89,19 @@ export function MemberManagementTable({
                     </Button>
                     <Button size="icon" variant="outline" onClick={() => update(member.id, "status", { visibility_status: "hidden" })} aria-label="Hide member">
                       <EyeOff className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() =>
+                        update(member.id, "status", {
+                          visibility_status: member.visibility_status === "deactivated" ? "approved" : "deactivated",
+                        })
+                      }
+                      aria-label={member.visibility_status === "deactivated" ? "Reactivate member" : "Deactivate member"}
+                      title={member.visibility_status === "deactivated" ? "Reactiveren" : "Direct deactiveren"}
+                    >
+                      <Ban className="h-4 w-4" />
                     </Button>
                     <Button size="icon" variant="outline" onClick={() => setEditing(member)} aria-label="Edit member">
                       <Pencil className="h-4 w-4" />
@@ -125,6 +151,7 @@ function EditMemberModal({
     looking_for: member.looking_for.join(", "),
     languages: member.languages.join(", "),
     visibility_status: member.visibility_status,
+    member_type: member.member_type,
     consent_given: member.consent_given,
     open_to_mentor: member.open_to_mentor,
     open_to_opportunities: member.open_to_opportunities,
@@ -174,11 +201,22 @@ function EditMemberModal({
               onChange={(event) => setValue("visibility_status", event.target.value)}
               className="mt-2 h-11 w-full rounded-2xl border border-charcoal/12 bg-white/80 px-4 text-sm font-semibold text-charcoal outline-none"
             >
-              {["pending", "approved", "hidden", "rejected"].map((status) => (
+              {["pending", "approved", "hidden", "rejected", "deactivated"].map((status) => (
                 <option key={status} value={status}>
                   {status}
                 </option>
               ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-sm font-bold text-charcoal">Type</span>
+            <select
+              value={draft.member_type}
+              onChange={(event) => setValue("member_type", event.target.value)}
+              className="mt-2 h-11 w-full rounded-2xl border border-charcoal/12 bg-white/80 px-4 text-sm font-semibold text-charcoal outline-none"
+            >
+              <option value="member">Lid</option>
+              <option value="friend">Vriend van IN-IT</option>
             </select>
           </label>
           <label className="block md:col-span-2">

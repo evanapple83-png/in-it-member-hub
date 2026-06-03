@@ -1,6 +1,7 @@
-import { asc } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/db";
-import { communities } from "@/db/schema";
+import { communities, communityMemberships, communityPosts, members } from "@/db/schema";
+import type { CommunityMemberSummary, CommunityPost } from "@/lib/types";
 
 export type Community = {
   id: string;
@@ -63,4 +64,119 @@ export async function getCommunities(): Promise<Community[]> {
   } catch {
     return seedCommunities;
   }
+}
+
+export async function getCommunityBySlug(slug: string): Promise<Community | null> {
+  return (await getCommunities()).find((community) => community.slug === slug) ?? null;
+}
+
+export async function getCommunityMembers(communityId: string): Promise<CommunityMemberSummary[]> {
+  if (!hasDatabase()) return [];
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: members.id,
+        full_name: members.fullName,
+        headline: members.headline,
+        role: members.role,
+        photo_url: members.photoUrl,
+        community_role: communityMemberships.role,
+      })
+      .from(communityMemberships)
+      .innerJoin(members, eq(communityMemberships.memberId, members.id))
+      .where(and(eq(communityMemberships.communityId, communityId), eq(members.visibilityStatus, "approved")))
+      .orderBy(asc(members.fullName));
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
+export async function getMembership(communityId: string, memberId: string) {
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(communityMemberships)
+    .where(and(eq(communityMemberships.communityId, communityId), eq(communityMemberships.memberId, memberId)))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function joinCommunity(communityId: string, memberId: string) {
+  const db = getDb();
+  await db
+    .insert(communityMemberships)
+    .values({ communityId, memberId })
+    .onConflictDoNothing({ target: [communityMemberships.communityId, communityMemberships.memberId] });
+}
+
+export async function leaveCommunity(communityId: string, memberId: string) {
+  const db = getDb();
+  await db
+    .delete(communityMemberships)
+    .where(and(eq(communityMemberships.communityId, communityId), eq(communityMemberships.memberId, memberId)));
+}
+
+export async function listCommunityPosts(communityId: string, includeHidden = false): Promise<CommunityPost[]> {
+  if (!hasDatabase()) return [];
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: communityPosts.id,
+        community_id: communityPosts.communityId,
+        body: communityPosts.body,
+        status: communityPosts.status,
+        created_at: communityPosts.createdAt,
+        author_id: communityPosts.authorMemberId,
+        author_name: members.fullName,
+        author_photo: members.photoUrl,
+        author_role: members.role,
+      })
+      .from(communityPosts)
+      .leftJoin(members, eq(communityPosts.authorMemberId, members.id))
+      .where(
+        includeHidden
+          ? eq(communityPosts.communityId, communityId)
+          : and(eq(communityPosts.communityId, communityId), eq(communityPosts.status, "published")),
+      )
+      .orderBy(desc(communityPosts.createdAt));
+    return rows
+      .map((row) => ({
+        id: row.id,
+        community_id: row.community_id,
+        body: row.body,
+        status: row.status as CommunityPost["status"],
+        created_at: row.created_at.toISOString(),
+        author_id: row.author_id,
+        author_name: row.author_name ?? "Verwijderd lid",
+        author_photo: row.author_photo,
+        author_role: row.author_role,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+export async function createCommunityPost(communityId: string, memberId: string, body: string) {
+  const db = getDb();
+  const [row] = await db.insert(communityPosts).values({ communityId, authorMemberId: memberId, body }).returning();
+  return row;
+}
+
+export async function getCommunityPost(postId: string) {
+  const db = getDb();
+  const [row] = await db.select().from(communityPosts).where(eq(communityPosts.id, postId)).limit(1);
+  return row ?? null;
+}
+
+export async function setCommunityPostStatus(postId: string, status: "published" | "hidden") {
+  const db = getDb();
+  await db.update(communityPosts).set({ status, updatedAt: new Date() }).where(eq(communityPosts.id, postId));
+}
+
+export async function deleteCommunityPost(postId: string) {
+  const db = getDb();
+  await db.delete(communityPosts).where(eq(communityPosts.id, postId));
 }

@@ -11,6 +11,8 @@ import { admins } from "@/db/schema";
 
 const privateNavItems = [
   { href: "/members", label: "Members" },
+  { href: "/agenda", label: "Agenda" },
+  { href: "/blog", label: "Blog" },
   { href: "/communities", label: "Communities" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },

@@ -1,6 +1,6 @@
 import type { Member } from "@/lib/types";
 
-export const seedMembers: Member[] = [
+const rawSeedMembers: Array<Omit<Member, "member_type" | "public_fields" | "email_opt_out">> = [
   {
     id: "amina-hassan",
     full_name: "Amina Hassan",
@@ -313,6 +313,17 @@ export const seedMembers: Member[] = [
     created_at: "2026-05-18T10:00:00.000Z",
   },
 ];
+
+// Demo data predates per-field public visibility; expose a sensible public set so the
+// public directory/profile pages have something to render in DB-less seed mode.
+const seedPublicFields = ["photo_url", "headline", "role", "company", "location", "skills"];
+
+export const seedMembers: Member[] = rawSeedMembers.map((member) => ({
+  ...member,
+  member_type: "member" as const,
+  public_fields: member.visibility_status === "approved" && member.consent_given ? seedPublicFields : [],
+  email_opt_out: false,
+}));
 
 export const approvedSeedMembers = seedMembers.filter(
   (member) => member.visibility_status === "approved" && member.consent_given,
