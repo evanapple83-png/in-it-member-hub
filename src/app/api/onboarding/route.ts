@@ -69,16 +69,18 @@ export async function POST(request: Request) {
     openToCollaborate: payload.data.open_to_collaborate,
     openToSpeaking: payload.data.open_to_speaking,
     publicFields: payload.data.public_fields,
-    visibilityStatus: "pending",
     consentGiven: true,
     onboardingCompleted: true,
     authProvider: "linkedin",
     updatedAt: new Date(),
   };
 
+  // New members start as 'pending' (FR-019 review workflow); an existing member keeps
+  // their current status, so an approved member editing their profile stays approved
+  // and does not drop out of the directory until re-approval.
   const [member] = await db
     .insert(members)
-    .values(memberInput)
+    .values({ ...memberInput, visibilityStatus: "pending" })
     .onConflictDoUpdate({
       target: members.email,
       set: memberInput,

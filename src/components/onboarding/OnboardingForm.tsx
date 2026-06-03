@@ -60,6 +60,7 @@ export function OnboardingForm() {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [publicEnabled, setPublicEnabled] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "success">("idle");
+  const [savedApproved, setSavedApproved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { data: session, status: sessionStatus } = useSession();
   const sessionError =
@@ -138,12 +139,13 @@ export function OnboardingForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
+    const body = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
       setError(body.error ?? "Could not save your profile.");
       setStatus("idle");
       return;
     }
+    setSavedApproved(body?.member?.visibility_status === "approved");
     setStatus("success");
   }
 
@@ -169,9 +171,13 @@ export function OnboardingForm() {
     return (
       <div className="rounded-[2rem] border border-charcoal/10 bg-white/78 p-10 text-center shadow-sm">
         <CheckCircle2 className="mx-auto h-14 w-14 text-deep-blue" />
-        <h2 className="mt-5 text-3xl font-black text-charcoal">Your profile has been submitted.</h2>
+        <h2 className="mt-5 text-3xl font-black text-charcoal">
+          {savedApproved ? "Your profile has been updated." : "Your profile has been submitted."}
+        </h2>
         <p className="mx-auto mt-3 max-w-xl leading-7 text-charcoal/66">
-          An IN-IT admin will review it before it becomes visible in the member hub.
+          {savedApproved
+            ? "Your changes are saved and immediately visible in the member hub."
+            : "An IN-IT admin will review it before it becomes visible in the member hub."}
         </p>
       </div>
     );
