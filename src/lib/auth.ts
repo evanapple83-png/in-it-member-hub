@@ -2,7 +2,7 @@ import type { NextAuthOptions } from "next-auth";
 import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/db";
-import { linkedinAccounts } from "@/db/schema";
+import { admins, linkedinAccounts } from "@/db/schema";
 import { getActiveInviteByCode, redeemInviteCode } from "@/lib/invites";
 
 function isBootstrapAdminEmail(email?: string | null) {
@@ -45,9 +45,28 @@ export const authOptions: NextAuthOptions = {
       const email = linkedinProfile?.email ?? user.email;
       if (!linkedinSub) return false;
 
-      if (isBootstrapAdminEmail(email)) return true;
-
       const db = getDb();
+
+      // Emails in BOOTSTRAP_ADMIN_EMAILS get in without an invite AND hold an admin row, so a
+      // founder can never be locked out of /admin (June incident). Idempotent on every sign-in.
+      if (isBootstrapAdminEmail(email)) {
+        await db
+          .insert(linkedinAccounts)
+          .values({
+            userId: linkedinSub,
+            linkedinSub,
+            linkedinEmail: email,
+            linkedinName: linkedinProfile?.name ?? user.name,
+            linkedinPicture: linkedinProfile?.picture ?? user.image,
+            provider: "linkedin",
+            lastSyncedAt: new Date(),
+          })
+          .onConflictDoNothing();
+        const [admin] = await db.select({ id: admins.id }).from(admins).where(eq(admins.userId, linkedinSub)).limit(1);
+        if (!admin) await db.insert(admins).values({ userId: linkedinSub });
+        return true;
+      }
+
       const [existingAccount] = await db
         .select({ id: linkedinAccounts.id })
         .from(linkedinAccounts)

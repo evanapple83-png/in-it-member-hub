@@ -78,7 +78,7 @@ export function AccessRequestsClient() {
             Kopieer
           </Button>
           <p className="text-sm font-semibold text-charcoal/58">
-            {freshCode.emailed ? "Activeringsmail verstuurd." : "E-mail niet verzonden (geen provider) — deel de code handmatig."}
+            {freshCode.emailed ? "Activeringsmail verstuurd." : "Er is geen e-mail verstuurd. Deel de code zelf met de aanvrager, hij is 24 uur geldig."}
           </p>
         </div>
       ) : null}

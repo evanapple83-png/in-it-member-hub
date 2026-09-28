@@ -2,7 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/db";
 import { accessRequestFromRow } from "@/db/mapper";
 import { accessRequests, invites } from "@/db/schema";
-import { activationEmail, sendEmail } from "@/lib/email";
+import { activationEmail, hasEmail, sendEmail } from "@/lib/email";
 import { generateInviteCode, hashInviteCode } from "@/lib/invites";
 import type { AccessRequest, MemberType } from "@/lib/types";
 
@@ -84,7 +84,8 @@ export async function approveAccessRequest(id: string, adminId: string): Promise
   const email = activationEmail({ name: existing.fullName, code });
   const sent = await sendEmail({ to: existing.email, subject: email.subject, html: email.html, text: email.text });
 
-  return { ok: true, request: accessRequestFromRow(updated), code, emailed: sent.ok };
+  // The stub reports ok without sending, so only claim "emailed" when a provider is configured.
+  return { ok: true, request: accessRequestFromRow(updated), code, emailed: hasEmail() && sent.ok };
 }
 
 export async function rejectAccessRequest(id: string, adminId: string, note?: string): Promise<ReviewResult> {

@@ -4,6 +4,7 @@ import { Mail } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
 import { isApprovedMember } from "@/lib/access";
+import { PRIVACY_CONTACT_EMAIL } from "@/lib/site";
 
 export default async function ContactPage() {
   if (!(await isApprovedMember())) redirect("/join?locked=contact");
@@ -12,7 +13,7 @@ export default async function ContactPage() {
     <PageShell
       eyebrow="Contact"
       title="Bring a question, partnership idea or community opportunity"
-      description="Use this page as the contact CTA for V0.2. A production version can connect this form to email or a CRM."
+      description="Email the IN-IT team and we will get back to you."
     >
       <div className="max-w-2xl rounded-3xl border border-charcoal/10 bg-white/72 p-8 shadow-sm">
         <p className="leading-7 text-charcoal/68">
@@ -20,7 +21,7 @@ export default async function ContactPage() {
           conversation to the right volunteer.
         </p>
         <Button asChild className="mt-6">
-          <Link href="mailto:hello@in-it.example">
+          <Link href={`mailto:${PRIVACY_CONTACT_EMAIL}`}>
             <Mail className="h-4 w-4" />
             Email IN-IT
           </Link>

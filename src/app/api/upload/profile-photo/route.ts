@@ -6,21 +6,21 @@ import { authOptions } from "@/lib/auth";
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Sign in before uploading a profile photo." }, { status: 401 });
+    return NextResponse.json({ error: "Log eerst in om een profielfoto te uploaden." }, { status: 401 });
   }
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return NextResponse.json({ error: "Vercel Blob is not configured." }, { status: 503 });
+    return NextResponse.json({ error: "Foto uploaden lukt op dit moment niet. Probeer het later opnieuw." }, { status: 503 });
   }
 
   const formData = await request.formData();
   const file = formData.get("file");
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Missing file." }, { status: 400 });
+    return NextResponse.json({ error: "Kies eerst een foto." }, { status: 400 });
   }
 
   if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-    return NextResponse.json({ error: "Only PNG, JPG and WebP images are supported." }, { status: 400 });
+    return NextResponse.json({ error: "Alleen PNG, JPG en WebP worden ondersteund." }, { status: 400 });
   }
 
   const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");

@@ -6,6 +6,7 @@ import { getDb, hasDatabase } from "@/db";
 import { linkedinAccounts, members } from "@/db/schema";
 import { getCurrentMember } from "@/lib/access";
 import { authOptions } from "@/lib/auth";
+import { deleteProfilePhotos } from "@/lib/profile-photos";
 
 // Own profile read — used by the profile form to hydrate existing values
 // so a re-save never silently wipes previously stored fields.
@@ -54,5 +55,7 @@ export async function DELETE() {
   const db = getDb();
   await db.delete(linkedinAccounts).where(eq(linkedinAccounts.userId, session.user.id));
   await db.delete(members).where(eq(members.userId, session.user.id));
+  // The account is already gone; a storage hiccup must not report the deletion as failed.
+  await deleteProfilePhotos(session.user.id).catch((error) => console.error("[me:delete] photo cleanup failed", error));
   return NextResponse.json({ ok: true });
 }
