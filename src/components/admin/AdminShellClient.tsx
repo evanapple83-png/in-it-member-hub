@@ -88,7 +88,7 @@ export function AdminShellClient({ me, openCount, children }: { me: Me; openCoun
             </button>
           </header>
 
-          <main className="main" ref={mainRef} id="main">
+          <main className="main" ref={mainRef} id="main" data-motion-page>
             {children}
           </main>
 

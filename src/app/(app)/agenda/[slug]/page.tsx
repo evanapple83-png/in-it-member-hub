@@ -22,7 +22,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const online = Boolean(event.meet_link) && !event.location;
 
   return (
-    <div className="page">
+    <div className="page" data-reveal-group>
       <HeroSettle />
       <section className="panel flush ghead">
         <HeaderCover crop={event.slug} src={event.cover_image_url} back="/agenda" backLabel="Terug naar agenda" />

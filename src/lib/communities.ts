@@ -1,6 +1,7 @@
 import { and, asc, count, desc, eq } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/db";
 import { communities, communityMemberships, communityPosts, members } from "@/db/schema";
+import { countComments } from "@/lib/comments";
 import { uniqueSlug } from "@/lib/slug";
 import { slugify } from "@/lib/utils";
 import type { CommunityMemberSummary, CommunityPost } from "@/lib/types";
@@ -147,8 +148,14 @@ export async function listCommunityPosts(communityId: string, includeHidden = fa
           : and(eq(communityPosts.communityId, communityId), eq(communityPosts.status, "published")),
       )
       .orderBy(desc(communityPosts.createdAt));
+    // Reactietellers in één gegroepeerde query (geen N+1); faalt open naar 0.
+    const counts = await countComments(
+      "community_post",
+      rows.map((row) => row.id),
+    );
     return rows
       .map((row) => ({
+        comment_count: counts[row.id] ?? 0,
         id: row.id,
         community_id: row.community_id,
         body: row.body,

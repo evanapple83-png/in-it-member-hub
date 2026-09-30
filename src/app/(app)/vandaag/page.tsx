@@ -4,6 +4,7 @@ import { Avatar } from "@/components/app/Avatar";
 import { EmptyState } from "@/components/app/EmptyState";
 import { Panel } from "@/components/app/Panel";
 import { EventRow, FeatureEvent, FeatureStory, GroupTile } from "@/components/app/community/cards";
+import { WelcomeSteps } from "@/components/app/WelcomeSteps";
 import { Icon } from "@/components/ui/icon";
 import { getApprovedCurrentMember } from "@/lib/access";
 import { getShowcasePost } from "@/lib/blog";
@@ -19,7 +20,6 @@ import {
   upcomingEvents,
 } from "@/lib/hub";
 import { getPublicMembers } from "@/lib/members";
-import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Vandaag | IN-IT" };
 
@@ -54,8 +54,8 @@ export default async function VandaagPage() {
   const first = member.full_name.split(" ")[0];
 
   return (
-    <div className="page">
-      <div className="hello">
+    <div className="page" data-reveal-group>
+      <div className="hello" data-reveal>
         <div>
           <h1>
             {greeting()}, {first}
@@ -65,27 +65,12 @@ export default async function VandaagPage() {
       </div>
 
       {done < steps.length ? (
-        <section className="panel welcome">
+        <section className="panel welcome" data-reveal>
           <div className="l">
             <h3>Welkom bij IN-IT</h3>
             <p className="muted">Drie stappen en je bent helemaal binnen.</p>
           </div>
-          <div className="steps">
-            {steps.map((step) => (
-              <Link key={step.key} href={step.href} className={cn("step", step.done && "done")}>
-                <span className="ck">
-                  <Icon name="check" />
-                </span>
-                {step.label}
-              </Link>
-            ))}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={3} aria-valuenow={done} aria-label="Voortgang">
-              <i style={{ transform: `scaleX(${done / steps.length})` }} />
-            </div>
-            <small className="muted num">{done} van 3</small>
-          </div>
+          <WelcomeSteps steps={steps} />
         </section>
       ) : null}
 
@@ -96,7 +81,7 @@ export default async function VandaagPage() {
           ) : next ? (
             <FeatureEvent event={next} kicker={next.my_rsvp === "going" ? "Jij gaat" : "Volgende activiteit"} />
           ) : (
-            <Panel>
+            <Panel reveal>
               <EmptyState
                 icon="cal"
                 title="Het is even rustig"
@@ -107,6 +92,7 @@ export default async function VandaagPage() {
 
           {upcoming.length ? (
             <Panel
+              reveal
               title="Binnenkort"
               count={upcoming.length}
               action={
@@ -124,7 +110,7 @@ export default async function VandaagPage() {
           ) : null}
 
           {groupPosts.length ? (
-            <Panel title="Uit jouw groepen">
+            <Panel reveal title="Uit jouw groepen">
               <div className="rows">
                 {groupPosts.map((post) => (
                   <Link key={post.id} href={`/communities/${post.community_slug}`} className="erow">
@@ -143,7 +129,7 @@ export default async function VandaagPage() {
           ) : null}
 
           {discover.length ? (
-            <section>
+            <section data-reveal>
               <div className="ph">
                 <h3>Groepen om te ontdekken</h3>
                 <Link className="link" href="/communities">
@@ -162,6 +148,7 @@ export default async function VandaagPage() {
         <aside className="stack aside">
           {others.length ? (
             <Panel
+              reveal
               title="Leer kennen"
               action={
                 <Link className="link" href="/members">
@@ -170,7 +157,7 @@ export default async function VandaagPage() {
               }
             >
               {others.map((person) => (
-                <Link key={person.id} href={`/members/${person.id}`} className="person">
+                <Link key={person.id} href={`/members/${person.id}`} className="person" data-hover="lift">
                   <Avatar name={person.full_name} photoUrl={person.photo_url} id={person.id} />
                   <span className="t">
                     <b>{person.full_name}</b>
@@ -185,7 +172,7 @@ export default async function VandaagPage() {
           ) : null}
 
           {upcoming.length ? (
-            <Panel title="Jouw aanmeldingen" count={mine.length || undefined}>
+            <Panel reveal title="Jouw aanmeldingen" count={mine.length || undefined}>
               {mine.length ? (
                 <div className="rows">
                   {mine.map((event) => (
@@ -204,10 +191,10 @@ export default async function VandaagPage() {
             </Panel>
           ) : null}
 
-          <section className="navycard">
+          <section className="navycard" data-reveal>
             <h3>Ken je iemand voor IN-IT?</h3>
             <p>Draag een collega of vriend voor. De coördinator kijkt mee en stuurt een uitnodiging.</p>
-            <Link className="btn" href="/request-access">
+            <Link className="btn" href="/request-access" data-press>
               Draag iemand voor
             </Link>
           </section>

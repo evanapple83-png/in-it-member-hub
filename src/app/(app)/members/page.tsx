@@ -25,8 +25,8 @@ export default async function MembersPage() {
   }));
 
   return (
-    <div className="page">
-      <div className="hello">
+    <div className="page" data-reveal-group>
+      <div className="hello" data-reveal>
         <div>
           <h1>Leden</h1>
           <p>Vind iemand op vakgebied, rol of waar ze voor openstaan.</p>

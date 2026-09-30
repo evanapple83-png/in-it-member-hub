@@ -45,8 +45,8 @@ export default async function CommunitiesPage() {
   );
 
   return (
-    <div className="page">
-      <div className="hello">
+    <div className="page" data-reveal-group>
+      <div className="hello" data-reveal>
         <div>
           <h1>Groepen</h1>
           <p>Vakgroepen en sociale plekken binnen IN-IT.</p>

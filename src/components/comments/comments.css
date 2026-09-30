@@ -1,0 +1,17 @@
+/* Reacties: bouwt voort op .replies / .reply / .bub / .replybox uit app.css. */
+.replies.thread-story { margin-left: 0; padding-left: 0; border-left: 0; }
+.reply > div { display: grid; gap: 4px; min-width: 0; }
+.reply .bub p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.reply.is-hidden .bub { opacity: .55; }
+.reply.is-pending .bub { opacity: .7; }
+.reply .acts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding-left: 12px; font-size: 12px; color: var(--muted); }
+.reply .acts button { font-size: 12px; color: var(--muted); padding: 2px 0; }
+.reply .acts button:hover { color: var(--ink); }
+.reply .acts button.danger { color: var(--accent); }
+.replybox { align-items: flex-end; }
+.replybox textarea { flex: 1; min-width: 0; min-height: 36px; max-height: 160px; resize: none; border-radius: 18px; border: 1px solid var(--line-strong); padding: 8px 14px; outline: 0; font: inherit; font-size: 14px; line-height: 1.4; background: #fff; }
+.replybox textarea:focus { border-color: var(--navy); }
+.replybox .round:disabled { opacity: .5; cursor: default; }
+.thread-note { font-size: 13px; color: var(--muted); }
+.thread-note a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.post .bar .spacer { flex: 1; }

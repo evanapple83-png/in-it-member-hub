@@ -35,15 +35,17 @@ export function Pills({
         const inner = (
           <>
             {item.label}
-            {item.count !== undefined ? <span className="badge num">{item.count}</span> : null}
+            {item.count !== undefined ? <span className="badge num" data-count>
+                {item.count}
+              </span> : null}
           </>
         );
         return item.href ? (
-          <Link key={item.key} href={item.href} className={cls} aria-current={on ? "page" : undefined} scroll={false}>
+          <Link key={item.key} href={item.href} className={cls} aria-current={on ? "page" : undefined} scroll={false} data-press>
             {inner}
           </Link>
         ) : (
-          <button key={item.key} type="button" className={cls} aria-pressed={on} onClick={() => onChange?.(item.key)}>
+          <button key={item.key} type="button" className={cls} aria-pressed={on} onClick={() => onChange?.(item.key)} data-press>
             {inner}
           </button>
         );

@@ -50,7 +50,7 @@ export function MembersView({ members }: { members: DirectoryMember[] }) {
 
   return (
     <>
-      <div className="toolbar">
+      <div className="toolbar" data-reveal>
         <Pills items={pills} active={filter} onChange={(key) => setFilter(key as Filter)} label="Filter leden" className="seg-pills" />
         <div style={{ display: "flex", gap: 10, alignItems: "center", flex: 1, justifyContent: "flex-end", minWidth: 0 }}>
           <label className="field">
@@ -75,7 +75,7 @@ export function MembersView({ members }: { members: DirectoryMember[] }) {
       </div>
 
       {list.length === 0 ? (
-        <div className="panel">
+        <div className="panel" data-reveal>
           <EmptyState
             icon="search"
             title="Niemand gevonden"
@@ -83,9 +83,9 @@ export function MembersView({ members }: { members: DirectoryMember[] }) {
           />
         </div>
       ) : view === "list" ? (
-        <div className="mlist">
+        <div className="mlist" data-reveal>
           {list.map((m) => (
-            <Link key={m.id} href={`/members/${m.id}`} className="mrow">
+            <Link key={m.id} href={`/members/${m.id}`} className="mrow" data-hover="lift">
               <Avatar name={m.name} photoUrl={m.photoUrl} id={m.id} />
               <span className="t">
                 <b>{m.name}</b>
@@ -103,9 +103,9 @@ export function MembersView({ members }: { members: DirectoryMember[] }) {
           ))}
         </div>
       ) : (
-        <div className="tiles three">
+        <div className="tiles three" data-reveal>
           {list.map((m, i) => (
-            <Link key={m.id} href={`/members/${m.id}`} className="tile mcard">
+            <Link key={m.id} href={`/members/${m.id}`} className="tile mcard" data-hover="lift">
               <Cover crop={COVER_CROPS[(i + 6) % COVER_CROPS.length]} />
               <Avatar name={m.name} photoUrl={m.photoUrl} id={m.id} />
               <div className="body" style={{ justifyItems: "center" }}>

@@ -9,6 +9,7 @@ export function Panel({
   action,
   flush = false,
   as: Tag = "section",
+  reveal = false,
   className,
   children,
 }: {
@@ -18,17 +19,21 @@ export function Panel({
   action?: ReactNode;
   flush?: boolean;
   as?: "section" | "div" | "article" | "aside";
+  /** Fade up on entry (motion contract `data-reveal`); put a `data-reveal-group` on the page. */
+  reveal?: boolean;
   className?: string;
   children?: ReactNode;
 }) {
   return (
-    <Tag className={cn("panel", flush && "flush", className)}>
+    <Tag className={cn("panel", flush && "flush", className)} data-reveal={reveal ? "" : undefined}>
       {title || action ? (
         <div className="ph">
           {title ? (
             <h3>
               {title}
-              {count !== undefined ? <span className={cn("badge num", countAccent && "accent")}>{count}</span> : null}
+              {count !== undefined ? <span className={cn("badge num", countAccent && "accent")} data-count>
+                  {count}
+                </span> : null}
             </h3>
           ) : (
             <span />

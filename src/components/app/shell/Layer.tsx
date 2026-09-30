@@ -1,11 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { EASE_OUT, EASE_SOFT, gsap, prefersReduced, useGSAP } from "@/components/motion/gsap";
 
 export type LayerKind = "pop" | "sheet" | "cmdk" | "modal";
 
-// One overlay (scrim + box) with the spec's enter/exit: mount, add `.show` next frame,
-// remove `.show` on close and unmount after the transition. Focus moves in and back out.
+// Hidden ("from") state per kind. CSS holds the shown state (`.show`); GSAP only plays the way in
+// and out, then clears its inline styles. Popovers scale from their trigger (transformOrigin from
+// popStyle), the palette and modals from their own centre, the sheet slides up.
+function hiddenState(kind: LayerKind, box: HTMLElement, reduced: boolean): gsap.TweenVars {
+  if (reduced) return { opacity: 0 };
+  if (kind === "sheet") return { yPercent: 100 };
+  if (kind === "modal" && getComputedStyle(box).bottom === "0px") return { opacity: 0, y: 24 }; // bottom sheet on mobile
+  return { opacity: 0, scale: kind === "pop" ? 0.96 : 0.97 };
+}
+
+// One overlay (scrim + box). Mounts on open, animates in with GSAP, animates out on close and
+// unmounts when the exit finishes. Focus moves in and back out.
 export function Layer({
   open,
   kind,
@@ -22,37 +33,58 @@ export function Layer({
   children: ReactNode;
 }) {
   const [mounted, setMounted] = useState(open);
-  const [show, setShow] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+  const scrimRef = useRef<HTMLDivElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
 
   if (open && !mounted) setMounted(true);
 
-  useEffect(() => {
-    if (open) {
-      returnFocus.current = document.activeElement as HTMLElement | null;
-      const frame = requestAnimationFrame(() => {
-        setShow(true);
-        const target = boxRef.current?.querySelector<HTMLElement>("[data-autofocus], input, a[href], button");
-        target?.focus({ preventScroll: true });
-      });
-      return () => cancelAnimationFrame(frame);
-    }
-    const frame = requestAnimationFrame(() => setShow(false));
-    const timer = window.setTimeout(() => {
-      // Only hand focus back if it is still ours (another overlay may have taken it).
-      const current = document.activeElement;
-      if (!current || current === document.body || boxRef.current?.contains(current)) {
-        returnFocus.current?.focus?.({ preventScroll: true });
+  useGSAP(
+    () => {
+      const box = boxRef.current;
+      const scrim = scrimRef.current;
+      if (!box || !scrim) return;
+      const reduced = prefersReduced();
+      const hidden = hiddenState(kind, box, reduced);
+
+      if (open) {
+        returnFocus.current = document.activeElement as HTMLElement | null;
+        gsap.fromTo(scrim, { opacity: 0 }, { opacity: 1, duration: reduced ? 0.12 : 0.18, ease: EASE_SOFT, clearProps: "opacity" });
+        gsap.fromTo(box, hidden, {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          yPercent: 0,
+          duration: reduced ? 0.12 : kind === "sheet" ? 0.34 : kind === "modal" ? 0.22 : 0.18,
+          ease: kind === "sheet" ? "expo.out" : EASE_OUT,
+          clearProps: "opacity,transform",
+        });
+        // Palette results settle in just after the box (first 8 only, opening is not typing).
+        if (kind === "cmdk" && !reduced) {
+          const items = Array.from(box.querySelectorAll<HTMLElement>(".it")).slice(0, 8);
+          if (items.length) gsap.fromTo(items, { opacity: 0, y: 4 }, { opacity: 1, y: 0, duration: 0.2, stagger: 0.018, delay: 0.04, ease: EASE_OUT, clearProps: "opacity,transform" });
+        }
+        const frame = requestAnimationFrame(() => {
+          const target = box.querySelector<HTMLElement>("[data-autofocus], input, a[href], button");
+          target?.focus({ preventScroll: true });
+        });
+        return () => cancelAnimationFrame(frame);
       }
-      returnFocus.current = null;
-      setMounted(false);
-    }, 220);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.clearTimeout(timer);
-    };
-  }, [open]);
+
+      const unmount = () => {
+        // Only hand focus back if it is still ours (another overlay may have taken it).
+        const current = document.activeElement;
+        if (!current || current === document.body || box.contains(current)) {
+          returnFocus.current?.focus?.({ preventScroll: true });
+        }
+        returnFocus.current = null;
+        setMounted(false);
+      };
+      gsap.to(scrim, { opacity: 0, duration: 0.14, ease: EASE_SOFT });
+      gsap.to(box, { ...hidden, duration: reduced ? 0.1 : kind === "sheet" ? 0.22 : 0.14, ease: EASE_SOFT, onComplete: unmount });
+    },
+    { dependencies: [open, mounted], revertOnUpdate: true },
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -69,10 +101,11 @@ export function Layer({
   if (!mounted) return null;
   return (
     <>
-      <div className={show ? "scrim show" : "scrim"} onClick={onClose} aria-hidden="true" />
+      <div ref={scrimRef} className="scrim show" data-gsap onClick={onClose} aria-hidden="true" />
       <div
         ref={boxRef}
-        className={show ? `${kind} show` : kind}
+        className={`${kind} show`}
+        data-gsap
         style={style}
         role="dialog"
         aria-modal="true"

@@ -31,7 +31,7 @@ export function LinkedInSignIn({
 
   return (
     <>
-      <button className={cn("btn li full", className)} type="button" onClick={go} disabled={busy} aria-busy={busy}>
+      <button data-press className={cn("btn li full", className)} type="button" onClick={go} disabled={busy} aria-busy={busy}>
         <span className="in" aria-hidden="true">
           in
         </span>

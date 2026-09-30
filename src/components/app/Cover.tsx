@@ -20,7 +20,8 @@ export function cropFor(key: string): CoverCrop {
   return COVER_CROPS[Math.abs(hash) % (COVER_CROPS.length - 1)];
 }
 
-// Cover block: a hero crop, or a real image when `src` is set. `zoom` scales it on hover.
+// Cover block: a hero crop, or a real image when `src` is set. Inside a `data-hover="lift"` card
+// the inner layer (`data-hover-media`) zooms on hover via MotionProvider.
 export function Cover({
   crop = "c-wide",
   src,
@@ -42,7 +43,7 @@ export function Cover({
       style={src ? { backgroundImage: `url(${JSON.stringify(src)})`, ...style } : style}
       aria-hidden={children ? undefined : true}
     >
-      <div className="cover-in" />
+      <div className="cover-in" data-hover-media />
       {children}
     </div>
   );

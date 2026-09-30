@@ -88,7 +88,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
           text={own ? "Vul je rol, vaardigheden en waar je mee kunt helpen in, dan vinden leden je makkelijker." : `${first} heeft het profiel nog niet ingevuld.`}
           action={
             own ? (
-              <Link className="btn primary" href="/onboarding">
+              <Link className="btn primary" href="/onboarding" data-press>
                 Profiel aanvullen
               </Link>
             ) : undefined
@@ -111,7 +111,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
         text={own ? "Word lid van een groep en hij verschijnt hier." : `${first} is nog geen lid van een groep.`}
         action={
           own ? (
-            <Link className="btn primary" href="/communities">
+            <Link className="btn primary" href="/communities" data-press>
               Groepen bekijken
             </Link>
           ) : undefined
@@ -141,8 +141,8 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
   const subtitle = [member.role || member.headline, member.location].filter(Boolean).join(", ");
 
   return (
-    <div className="page">
-      <section className="panel prof">
+    <div className="page" data-reveal-group>
+      <section className="panel prof" data-reveal>
         <Cover crop="c-wide" style={{ position: "relative" }}>
           <div className="stats">
             <div>

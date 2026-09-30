@@ -49,7 +49,7 @@ export function EventRow({ event, compact = false }: { event: CommunityEvent; co
 export function FeatureEvent({ event, kicker }: { event: CommunityEvent; kicker: string }) {
   const place = event.location || (event.meet_link ? "Online" : null);
   return (
-    <CoverLink href={`/agenda/${event.slug}`} className="panel flush feature">
+    <CoverLink href={`/agenda/${event.slug}`} className="panel flush feature" hover reveal>
       <div data-cover>
         <EventCover event={event} />
       </div>
@@ -80,7 +80,7 @@ export function FeatureEvent({ event, kicker }: { event: CommunityEvent; kicker:
 export function EventTile({ event }: { event: CommunityEvent }) {
   const going = event.rsvp_counts?.going ?? 0;
   return (
-    <article className="tile">
+    <article className="tile" data-hover="lift">
       <CoverLink href={`/agenda/${event.slug}`} className="tl">
         <div data-cover>
           <EventCover event={event} />
@@ -98,7 +98,9 @@ export function EventTile({ event }: { event: CommunityEvent }) {
       <div className="foot">
         <span className="chip soft">
           <Icon name="users" />
-          <span className="num">{going ? `${going} ${going === 1 ? "gaat" : "gaan"}` : "Wees de eerste"}</span>
+          <span className="num" data-count>
+            {going ? `${going} ${going === 1 ? "gaat" : "gaan"}` : "Wees de eerste"}
+          </span>
         </span>
         <span style={{ flex: 1 }} />
         {event.my_rsvp === "going" ? <GoingChip /> : <span className="chip tag">{capitalize(event.category)}</span>}
@@ -119,7 +121,7 @@ export function GroupTile({
   wide?: boolean;
 }) {
   return (
-    <article className={cn("tile", wide && "wide")}>
+    <article className={cn("tile", wide && "wide")} data-hover="lift">
       <CoverLink href={`/communities/${community.slug}`} className="tl">
         <div data-cover>
           <Cover crop={cropFor(community.slug)} src={community.cover_image_url} />
@@ -132,7 +134,9 @@ export function GroupTile({
       <div className="foot">
         <span className="chip soft">
           <Icon name="users" />
-          <span className="num">{count ? plural(count, "lid", "leden") : "Nog geen leden"}</span>
+          <span className="num" data-count>
+            {count ? plural(count, "lid", "leden") : "Nog geen leden"}
+          </span>
         </span>
         <span className="chip tag">{groupCategory(community.category)}</span>
         <span style={{ flex: 1 }} />
@@ -144,7 +148,7 @@ export function GroupTile({
 
 export function FeatureStory({ post, kicker }: { post: BlogPost; kicker: string }) {
   return (
-    <CoverLink href={`/blog/${post.slug}`} className="panel flush feature">
+    <CoverLink href={`/blog/${post.slug}`} className="panel flush feature" hover reveal>
       <div data-cover>
         <Cover crop={cropFor(post.slug)} src={post.cover_image_url} />
       </div>
@@ -166,7 +170,7 @@ export function FeatureStory({ post, kicker }: { post: BlogPost; kicker: string 
 
 export function StoryTile({ post }: { post: BlogPost }) {
   return (
-    <article className="tile" style={post.status === "hidden" ? { opacity: 0.6 } : undefined}>
+    <article className="tile" style={post.status === "hidden" ? { opacity: 0.6 } : undefined} data-hover="lift">
       <CoverLink href={`/blog/${post.slug}`} className="tl">
         <div data-cover>
           <Cover crop={cropFor(post.slug)} src={post.cover_image_url} />

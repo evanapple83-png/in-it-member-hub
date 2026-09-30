@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Avatar } from "@/components/app/Avatar";
 import { useToast } from "@/components/app/Toast";
+import { useGlide } from "@/components/motion/useGlide";
 import { Icon } from "@/components/ui/icon";
 import type { PersonSummary } from "@/lib/hub";
 import type { RsvpStatus } from "@/lib/types";
@@ -52,6 +53,8 @@ export function EventRoom({
   const others = initialAttendees.filter((person) => person.id !== me.id);
   const who = rsvp === "going" ? [me, ...others] : others;
   const index = OPTIONS.findIndex((option) => option.value === rsvp);
+  // Segmented thumb glides with a slight overshoot.
+  const thumb = useGlide<HTMLSpanElement>(index, "xPercent", 100, "back.out(1.4)");
 
   async function choose(next: RsvpStatus) {
     if (busy || next === rsvp) return;
@@ -77,9 +80,9 @@ export function EventRoom({
 
   return (
     <div className="cols">
-      <div className="stack">
+      <div className="stack" data-reveal-group>
         {description ? (
-          <section className="panel">
+          <section className="panel" data-reveal>
             <div className="ph">
               <h3>Over deze activiteit</h3>
             </div>
@@ -88,14 +91,12 @@ export function EventRoom({
             </p>
           </section>
         ) : null}
-        <section className="panel">
+        <section className="panel" data-reveal>
           <div className="ph">
             <h3>
               {past ? "Wie er waren" : "Wie er komen"}{" "}
-              <span className="badge num">
-                <span className="roll">
-                  <span key={who.length}>{who.length}</span>
-                </span>
+              <span className="badge num" data-count>
+                {who.length}
               </span>
             </h3>
           </div>
@@ -131,8 +132,8 @@ export function EventRoom({
         </section>
       </div>
 
-      <aside className="stack aside">
-        <section className="panel" style={{ display: "grid", gap: 16 }}>
+      <aside className="stack aside" data-reveal-group>
+        <section className="panel" style={{ display: "grid", gap: 16 }} data-reveal>
           <div className="metalist">
             <div>
               <span className="ic">
@@ -164,8 +165,10 @@ export function EventRoom({
             <>
               <div className="rsvp" role="radiogroup" aria-label="Aanmelden" aria-busy={busy}>
                 <span
+                  ref={thumb}
                   className={cn("thumb", rsvp === "going" && "going")}
-                  style={{ opacity: index < 0 ? 0 : 1, transform: `translateX(${Math.max(index, 0) * 100}%)` }}
+                  data-off={index < 0 ? "" : undefined}
+                  style={{ "--i": Math.max(index, 0) } as CSSProperties}
                 />
                 {OPTIONS.map((option) => (
                   <button
@@ -182,17 +185,17 @@ export function EventRoom({
                 ))}
               </div>
               {rsvp === "going" && meetLink ? (
-                <a className="btn primary" href={meetLink} target="_blank" rel="noreferrer" style={{ animation: "rise .3s var(--ease)" }}>
+                <a className="btn primary" href={meetLink} target="_blank" rel="noreferrer" data-new data-press>
                   <Icon name="video" />
                   Deelnemen via Google Meet
                 </a>
               ) : null}
-              <a className="btn ghost" href={`/api/events/${eventId}/ics`}>
+              <a className="btn ghost" href={`/api/events/${eventId}/ics`} data-press>
                 <Icon name="calplus" />
                 Zet in mijn agenda
               </a>
               {calendarLink ? (
-                <a className="btn ghost" href={calendarLink} target="_blank" rel="noreferrer">
+                <a className="btn ghost" href={calendarLink} target="_blank" rel="noreferrer" data-press>
                   <Icon name="cal" />
                   Open in Google Agenda
                 </a>

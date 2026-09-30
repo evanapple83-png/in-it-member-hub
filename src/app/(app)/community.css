@@ -14,7 +14,6 @@
   .btn.danger { color: var(--accent); }
   .btn.danger:hover { background: var(--accent-soft); }
   .btn.joined { transition: background-color .2s var(--ease), color .2s var(--ease), transform .14s var(--ease); }
-  .btn.joined svg { animation: pop .3s var(--ease); }
 
   .post.is-hidden { opacity: .6; }
   .post .bar .note-hidden { font-size: 12.5px; color: var(--muted); }

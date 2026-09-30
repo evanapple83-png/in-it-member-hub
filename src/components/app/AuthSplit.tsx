@@ -16,7 +16,7 @@ export function AuthSplit({
   return (
     <div className="screen auth">
       <div className="formside">
-        <div className="form">
+        <div className="form" data-reveal-children>
           <div className="logo">
             <Image src="/in-it-logo.png" alt="" width={38} height={38} priority />
             IN-IT
@@ -27,7 +27,7 @@ export function AuthSplit({
       <div className="imgside">
         <Cover crop={crop}>
           {quote ? (
-            <div className="quote">
+            <div className="quote" data-reveal>
               <b>{quote.title}</b>
               <span>{quote.text}</span>
             </div>

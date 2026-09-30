@@ -21,7 +21,7 @@ export function TabbedPanels({
   const current = tabs.find((tab) => tab.key === active) ?? tabs[0];
   return (
     <>
-      <div className="toolbar">
+      <div className="toolbar" data-reveal>
         <Pills
           items={tabs.map(({ key, label, count }) => ({ key, label, count }))}
           active={current.key}
@@ -31,7 +31,7 @@ export function TabbedPanels({
         />
         {aside}
       </div>
-      <div key={current.key} className="stack" style={{ animation: "rise .3s var(--ease)" }}>
+      <div key={current.key} className="stack" data-reveal>
         {current.content}
       </div>
     </>

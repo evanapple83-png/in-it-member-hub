@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, integer, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 export const members = pgTable("members", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -211,6 +211,26 @@ export const blogPosts = pgTable(
   (table) => [uniqueIndex("blog_posts_slug_idx").on(table.slug)],
 );
 
+// Reacties onder verhalen (blog_posts) en groepsberichten (community_posts). Polymorf doel
+// (target_type + target_id), dus geen FK-cascade: triggers in drizzle/0008_comments.sql ruimen
+// reacties op zodra het verhaal of bericht verdwijnt (ook via de cascade bij een groep).
+export const comments = pgTable(
+  "comments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // 'blog_post' | 'community_post'
+    targetType: text("target_type").notNull(),
+    targetId: uuid("target_id").notNull(),
+    authorMemberId: uuid("author_member_id").references(() => members.id, { onDelete: "set null" }),
+    body: text("body").notNull(),
+    // 'published' | 'hidden' (moderation)
+    status: text("status").default("published").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index("comments_target_idx").on(table.targetType, table.targetId, table.createdAt)],
+);
+
 export type MemberRow = typeof members.$inferSelect;
 export type NewMemberRow = typeof members.$inferInsert;
 export type InviteRow = typeof invites.$inferSelect;
@@ -222,3 +242,4 @@ export type NewEventRow = typeof events.$inferInsert;
 export type EventRsvpRow = typeof eventRsvps.$inferSelect;
 export type CommunityPostRow = typeof communityPosts.$inferSelect;
 export type BlogPostRow = typeof blogPosts.$inferSelect;
+export type CommentRow = typeof comments.$inferSelect;

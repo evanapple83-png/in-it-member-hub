@@ -31,12 +31,12 @@ export default async function InloggenPage({ searchParams }: { searchParams: Pro
               De code is verlopen, al gebruikt, of hoort bij een ander e-mailadres dan dat van je LinkedIn-account. Vraag de beheerder om een nieuwe code.
             </p>
           </div>
-          <Link className="btn dark full" href="/join">
+          <Link data-press className="btn dark full" href="/join">
             <Icon name="key" />
             Andere code invullen
           </Link>
           <LinkedInSignIn label="Ander LinkedIn-account proberen" />
-          <Link className="btn ghost full" href="/request-access">
+          <Link data-press className="btn ghost full" href="/request-access">
             Toegang aanvragen zonder code
           </Link>
         </AuthSplit>
@@ -51,11 +51,11 @@ export default async function InloggenPage({ searchParams }: { searchParams: Pro
           </p>
         </div>
         <LinkedInSignIn label="Ander LinkedIn-account proberen" />
-        <Link className="btn dark full" href="/join">
+        <Link data-press className="btn dark full" href="/join">
           <Icon name="key" />
           Ik heb een uitnodigingscode
         </Link>
-        <Link className="btn ghost full" href="/request-access">
+        <Link data-press className="btn ghost full" href="/request-access">
           Toegang aanvragen zonder code
         </Link>
       </AuthSplit>
@@ -78,7 +78,7 @@ export default async function InloggenPage({ searchParams }: { searchParams: Pro
       ) : null}
       <LinkedInSignIn label="Inloggen met LinkedIn" />
       <div className="or">nieuw bij IN-IT</div>
-      <Link className="btn ghost full" href="/join">
+      <Link data-press className="btn ghost full" href="/join">
         <Icon name="key" />
         Ik heb een uitnodigingscode
       </Link>

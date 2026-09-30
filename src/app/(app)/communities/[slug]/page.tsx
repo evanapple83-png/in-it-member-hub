@@ -30,7 +30,7 @@ export default async function CommunityDetailPage({ params }: { params: Promise<
   ]);
 
   return (
-    <div className="page">
+    <div className="page" data-reveal-group>
       <HeroSettle />
       <GroupRoom
         key={community.id}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import { Providers } from "@/components/layout/Providers";
+import { MotionBoot } from "@/components/motion/MotionBoot";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -43,6 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-off-white text-charcoal">
+        <MotionBoot />
         <Providers>{children}</Providers>
       </body>
     </html>

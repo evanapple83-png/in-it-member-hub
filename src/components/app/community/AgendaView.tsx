@@ -24,7 +24,7 @@ export function AgendaView({ upcoming, past }: { upcoming: CommunityEvent[]; pas
   return (
     <>
       {cats.length > 1 ? (
-        <div className="toolbar">
+        <div className="toolbar" data-reveal>
           <Pills items={pills} active={cat} onChange={setCat} label="Filter op soort activiteit" className="seg-pills" />
         </div>
       ) : null}
@@ -32,7 +32,7 @@ export function AgendaView({ upcoming, past }: { upcoming: CommunityEvent[]; pas
       {first ? (
         <FeatureEvent event={first} kicker={first.my_rsvp === "going" ? "Jij gaat" : "Eerstvolgende"} />
       ) : (
-        <div className="panel">
+        <div className="panel" data-reveal>
           <EmptyState
             icon="cal"
             title={cat === "alles" ? "Nog niets gepland" : "Hier staat nu niets gepland"}
@@ -46,7 +46,7 @@ export function AgendaView({ upcoming, past }: { upcoming: CommunityEvent[]; pas
       )}
 
       {rest.length ? (
-        <div className="tiles three">
+        <div className="tiles three" data-reveal>
           {rest.map((event) => (
             <EventTile key={event.id} event={event} />
           ))}
@@ -54,10 +54,13 @@ export function AgendaView({ upcoming, past }: { upcoming: CommunityEvent[]; pas
       ) : null}
 
       {oldList.length ? (
-        <section className="panel quiet">
+        <section className="panel quiet" data-reveal>
           <div className="ph">
             <h3>
-              Geweest <span className="badge num">{oldList.length}</span>
+              Geweest{" "}
+              <span className="badge num" data-count>
+                {oldList.length}
+              </span>
             </h3>
           </div>
           <div className="rows">

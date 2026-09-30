@@ -225,7 +225,7 @@ export function ProfileForm({ mode, returnTo }: { mode: "new" | "edit"; returnTo
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Avatar name={form.full_name || "?"} photoUrl={form.photo_url || null} size="lg" />
           <div style={{ display: "grid", gap: 4 }}>
-            <button className="btn ghost sm" type="button" onClick={() => fileRef.current?.click()} disabled={uploading}>
+            <button data-press className="btn ghost sm" type="button" onClick={() => fileRef.current?.click()} disabled={uploading}>
               <Icon name="user" />
               {uploading ? "Foto uploaden..." : form.photo_url ? "Andere foto kiezen" : "Foto kiezen"}
             </button>
@@ -342,7 +342,7 @@ export function ProfileForm({ mode, returnTo }: { mode: "new" | "edit"; returnTo
             {error}
           </p>
         ) : null}
-        <button className="btn primary full" type="submit" disabled={!canSend} aria-busy={saving}>
+        <button data-press className="btn primary full" type="submit" disabled={!canSend} aria-busy={saving}>
           {saving ? "Even opslaan..." : cta}
         </button>
         <p className="fine" aria-live="polite">

@@ -91,6 +91,23 @@ export type CommunityPost = {
   author_name: string;
   author_photo?: string | null;
   author_role?: string | null;
+  /** Aantal zichtbare reacties; gevuld door listCommunityPosts in één gegroepeerde query. */
+  comment_count?: number;
+};
+
+export type CommentTargetType = "blog_post" | "community_post";
+
+// Reactie onder een verhaal of groepsbericht. Auteursvelden komen uit de members-join.
+export type Comment = {
+  id: string;
+  target_type: CommentTargetType;
+  target_id: string;
+  body: string;
+  status: "published" | "hidden";
+  created_at: string;
+  author_id: string | null;
+  author_name: string;
+  author_photo: string | null;
 };
 
 // Phase 6: ledenblog (besloten). Auteursvelden komen uit de members-join.

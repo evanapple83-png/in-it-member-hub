@@ -1,26 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import type { CSSProperties } from "react";
+import { useGlide } from "@/components/motion/useGlide";
 import { Icon, type IconName } from "@/components/ui/icon";
 
 export type NavItem = { href: string; label: string; icon: IconName; count?: number; tabLabel?: string };
 
 const ROW = 48; // 44px row + 4px gap, as in `.nav`
 
-// Sidebar nav with the gliding pill (`.nav .ind`). The pill moves with a CSS transition.
+// Sidebar nav with the gliding pill (`.nav .ind`).
 export function SideNav({ items, active, label }: { items: NavItem[]; active: number; label: string }) {
+  const ind = useGlide<HTMLSpanElement>(active, "y", ROW);
   return (
     <nav className="nav" aria-label={label}>
-      <span
-        className="ind"
-        style={{ transform: `translateY(${Math.max(active, 0) * ROW}px)`, opacity: active < 0 ? 0 : 1 }}
-      />
+      <span ref={ind} className="ind" data-off={active < 0 ? "" : undefined} style={{ "--i": Math.max(active, 0) } as CSSProperties} />
       {items.map((item, index) => (
         <Link key={item.href} href={item.href} className={index === active ? "on" : undefined} aria-current={index === active ? "page" : undefined}>
           <Icon name={item.icon} />
           {item.label}
           {item.count ? (
-            <span className="count num" aria-label={`${item.count} open`}>
+            <span className="count num" aria-label={`${item.count} open`} data-count>
               {item.count}
             </span>
           ) : null}
@@ -34,9 +34,10 @@ export function SideNav({ items, active, label }: { items: NavItem[]; active: nu
 export function TabBar({ items, active, label }: { items: NavItem[]; active: number; label: string }) {
   const tabs = items.slice(0, 4);
   const on = active >= 0 && active < tabs.length;
+  const ind = useGlide<HTMLSpanElement>(on ? active : -1, "xPercent", 100);
   return (
     <nav className="tabs" aria-label={label}>
-      <span className="ind" style={{ transform: `translateX(${Math.max(active, 0) * 100}%)`, opacity: on ? 1 : 0 }} />
+      <span ref={ind} className="ind" data-off={on ? undefined : ""} style={{ "--i": Math.max(active, 0) } as CSSProperties} />
       {tabs.map((item, index) => (
         <Link key={item.href} href={item.href} className={index === active ? "on" : undefined} aria-current={index === active ? "page" : undefined}>
           <Icon name={item.icon} />

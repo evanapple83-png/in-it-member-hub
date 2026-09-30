@@ -16,7 +16,7 @@ function finish() {
   done?.();
 }
 
-type VTDocument = Document & { startViewTransition?: (cb: () => Promise<void>) => unknown };
+type VTDocument = Document & { startViewTransition?: (cb: () => Promise<void>) => { finished?: Promise<unknown> } };
 
 export function CoverLink({
   href,
@@ -24,12 +24,18 @@ export function CoverLink({
   style,
   children,
   "aria-label": ariaLabel,
+  hover = false,
+  reveal = false,
 }: {
   href: string;
   className?: string;
   style?: CSSProperties;
   children: ReactNode;
   "aria-label"?: string;
+  /** Card hover lift (motion contract `data-hover="lift"`). */
+  hover?: boolean;
+  /** Fade up on entry (motion contract `data-reveal`). */
+  reveal?: boolean;
 }) {
   const router = useRouter();
 
@@ -42,7 +48,10 @@ export function CoverLink({
     // A detail header left in the DOM would carry the same name; only the clicked cover may.
     document.querySelectorAll<HTMLElement>("[data-hero]").forEach((el) => (el.style.viewTransitionName = "none"));
     if (cover) cover.style.viewTransitionName = "hero-cover";
-    doc.startViewTransition(
+    // Tells MotionProvider a view transition owns this navigation (no GSAP page exit/enter).
+    const html = document.documentElement;
+    html.setAttribute("data-vt", "");
+    const transition = doc.startViewTransition(
       () =>
         new Promise<void>((resolve) => {
           settle = resolve;
@@ -50,10 +59,21 @@ export function CoverLink({
           window.setTimeout(finish, 1500);
         }),
     );
+    const done = () => html.removeAttribute("data-vt");
+    if (transition?.finished) transition.finished.then(done, done);
+    else window.setTimeout(done, 1600);
   }
 
   return (
-    <Link href={href} className={className} style={style} onClick={onClick} aria-label={ariaLabel}>
+    <Link
+      href={href}
+      className={className}
+      style={style}
+      onClick={onClick}
+      aria-label={ariaLabel}
+      data-hover={hover ? "lift" : undefined}
+      data-reveal={reveal ? "" : undefined}
+    >
       {children}
     </Link>
   );

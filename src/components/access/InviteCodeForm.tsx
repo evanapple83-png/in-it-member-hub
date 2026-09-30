@@ -124,7 +124,7 @@ export function InviteCodeForm({ initialCode = "" }: { initialCode?: string }) {
           ) : null}
         </div>
         {!ok ? (
-          <button className="btn dark full" type="submit" disabled={busy} aria-busy={busy}>
+          <button data-press className="btn dark full" type="submit" disabled={busy} aria-busy={busy}>
             {busy ? "Even controleren..." : "Code controleren"}
           </button>
         ) : null}
@@ -136,7 +136,7 @@ export function InviteCodeForm({ initialCode = "" }: { initialCode?: string }) {
         </>
       ) : null}
       <div className="or">al lid</div>
-      <Link className="btn ghost full" href="/inloggen">
+      <Link data-press className="btn ghost full" href="/inloggen">
         Inloggen met LinkedIn
       </Link>
       <p className="fine">

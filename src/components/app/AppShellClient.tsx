@@ -120,7 +120,7 @@ export function AppShellClient({
               </i>
             </button>
             <div className="sp" />
-            <button className="btn primary desk-only" type="button" onClick={(e) => openMenu("share", e.currentTarget)} aria-haspopup="dialog">
+            <button className="btn primary desk-only" type="button" data-press onClick={(e) => openMenu("share", e.currentTarget)} aria-haspopup="dialog">
               <Icon name="plus" />
               Deel iets
             </button>
@@ -136,7 +136,7 @@ export function AppShellClient({
             </button>
           </header>
 
-          <main className="main" ref={mainRef} id="main">
+          <main className="main" ref={mainRef} id="main" data-motion-page>
             {children}
           </main>
 

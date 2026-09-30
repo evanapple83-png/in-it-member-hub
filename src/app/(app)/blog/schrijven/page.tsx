@@ -11,8 +11,8 @@ export default async function WriteBlogPostPage() {
   if (!member) redirect("/join?locked=blog");
 
   return (
-    <div className="page" style={{ maxWidth: 820 }}>
-      <div className="hello">
+    <div className="page" style={{ maxWidth: 820 }} data-reveal-group>
+      <div className="hello" data-reveal>
         <div>
           <h1>Deel jouw verhaal</h1>
           <p>Over een ervaring, project of les die je met de community wilt delen.</p>
@@ -22,7 +22,9 @@ export default async function WriteBlogPostPage() {
           Terug naar verhalen
         </Link>
       </div>
-      <BlogEditor />
+      <div data-reveal>
+        <BlogEditor />
+      </div>
     </div>
   );
 }

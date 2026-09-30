@@ -33,8 +33,8 @@ export default async function ProfilePage() {
   const shared = PUBLIC_FIELD_OPTIONS.filter((option) => member.public_fields.includes(option.key)).map((option) => option.label);
 
   return (
-    <div className="page">
-      <div className="hello">
+    <div className="page" data-reveal-group>
+      <div className="hello" data-reveal>
         <div>
           <h1>Instellingen</h1>
           <p>Je profiel, wat je deelt en wat IN-IT van je bewaart.</p>
@@ -43,7 +43,7 @@ export default async function ProfilePage() {
           <Link className="btn ghost" href={`/members/${member.id}`}>
             Bekijk je profiel
           </Link>
-          <Link className="btn primary" href="/onboarding">
+          <Link className="btn primary" href="/onboarding" data-press>
             <Icon name="pen" />
             Profiel bewerken
           </Link>
@@ -52,7 +52,7 @@ export default async function ProfilePage() {
 
       <div className="cols">
         <div className="stack">
-          <Panel title="Je profiel">
+          <Panel reveal title="Je profiel">
             <div className="person" style={{ background: "none", padding: 0 }}>
               <Avatar name={member.full_name} photoUrl={member.photo_url} id={member.id} size="lg" />
               <span className="t">
@@ -81,7 +81,7 @@ export default async function ProfilePage() {
         </div>
 
         <aside className="stack aside">
-          <Panel title="Je staat open voor">
+          <Panel reveal title="Je staat open voor">
             {openTo.length ? (
               <div className="chips">
                 {openTo.map((item) => (
@@ -96,7 +96,7 @@ export default async function ProfilePage() {
               </p>
             )}
           </Panel>
-          <Panel title="Zichtbaar buiten IN-IT">
+          <Panel reveal title="Zichtbaar buiten IN-IT">
             {shared.length ? (
               <>
                 <p className="muted" style={{ fontSize: 14, marginBottom: 10 }}>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Cover } from "@/components/app/Cover";
 import { SignOutButton } from "@/components/access/SignOutButton";
+import { gsap, prefersReduced, useGSAP } from "@/components/motion/gsap";
 import { Icon } from "@/components/ui/icon";
 
 const POLL_MS = 30_000;
@@ -24,6 +25,16 @@ export function WaitStatus({ info }: { info: WaitInfo }) {
   const router = useRouter();
   const [approved, setApproved] = useState(false);
   const busy = useRef(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Approval moment: the final step's check pops (the heading crossfades via data-new).
+  useGSAP(
+    () => {
+      if (!approved || prefersReduced()) return;
+      gsap.fromTo(".tl li.done.pop .dot", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.36, ease: "back.out(2.2)", clearProps: "opacity,transform" });
+    },
+    { dependencies: [approved], scope: cardRef },
+  );
 
   useEffect(() => {
     if (approved) return;
@@ -61,7 +72,7 @@ export function WaitStatus({ info }: { info: WaitInfo }) {
 
   return (
     <div className="screen wait enter">
-      <div className={`wcard${approved ? " approved" : ""}`}>
+      <div ref={cardRef} className={`wcard${approved ? " approved" : ""}`}>
         <Cover crop={approved ? "c-wide" : "c-wave"} />
         <div className="wb">
           {info.triedPath && !approved ? (
@@ -73,12 +84,14 @@ export function WaitStatus({ info }: { info: WaitInfo }) {
             </div>
           ) : null}
           <div aria-live="polite">
-            <h1>{approved ? `Welkom, ${info.firstName}. Je bent binnen.` : "Je aanvraag ligt bij de coördinator"}</h1>
-            <p className="sub" style={{ marginTop: 6 }}>
-              {approved
-                ? "Je profiel is goedgekeurd. Vanaf nu log je op elk apparaat in met LinkedIn, zonder code."
-                : "Meestal binnen een dag. Deze pagina gaat vanzelf open zodra je bent goedgekeurd."}
-            </p>
+            <div key={approved ? "in" : "wait"} data-new>
+              <h1>{approved ? `Welkom, ${info.firstName}. Je bent binnen.` : "Je aanvraag ligt bij de coördinator"}</h1>
+              <p className="sub" style={{ marginTop: 6 }}>
+                {approved
+                  ? "Je profiel is goedgekeurd. Vanaf nu log je op elk apparaat in met LinkedIn, zonder code."
+                  : "Meestal binnen een dag. Deze pagina gaat vanzelf open zodra je bent goedgekeurd."}
+              </p>
+            </div>
           </div>
           <ol className="tl">
             <Step done title="Uitnodigingscode" detail={info.codeLine} />
@@ -93,8 +106,8 @@ export function WaitStatus({ info }: { info: WaitInfo }) {
             </li>
           </ol>
           {approved ? (
-            <div className="wcta">
-              <Link className="btn primary" href="/vandaag">
+            <div className="wcta" data-new>
+              <Link data-press className="btn primary" href="/vandaag">
                 Naar de community
                 <Icon name="arrow" />
               </Link>
@@ -106,7 +119,7 @@ export function WaitStatus({ info }: { info: WaitInfo }) {
                 We kijken elke 30 seconden of je bent goedgekeurd.
               </div>
               <div className="wcta">
-                <Link className="btn ghost" href="/onboarding">
+                <Link data-press className="btn ghost" href="/onboarding">
                   <Icon name="pen" />
                   Profiel aanpassen
                 </Link>

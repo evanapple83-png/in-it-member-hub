@@ -4,10 +4,12 @@ import { Avatar } from "@/components/app/Avatar";
 import { HeaderCover } from "@/components/app/community/cards";
 import { HeroSettle } from "@/components/app/community/CoverLink";
 import { BlogPostActions } from "@/components/blog/BlogPostActions";
+import { CommentThread } from "@/components/comments/CommentThread";
 import { Icon } from "@/components/ui/icon";
 import { getApprovedCurrentMember } from "@/lib/access";
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { getBlogPostBySlug, getShowcasePost } from "@/lib/blog";
+import { listComments } from "@/lib/comments";
 import { longDate } from "@/lib/format-nl";
 import { adminCan } from "@/lib/roles";
 
@@ -30,6 +32,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   if (post.status === "hidden" && !isAuthor && !isModerator) notFound();
 
   const isShowcase = showcase?.id === post.id;
+  // Reacties server-side, zodat teller en lijst direct staan. Faalt open naar leeg.
+  const comments = await listComments("blog_post", post.id, isModerator).catch(() => []);
 
   return (
     <div className="page">
@@ -76,6 +80,27 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           isShowcase={isShowcase}
         />
       </article>
+
+      <section className="panel" aria-label="Reacties" data-reveal>
+        <CommentThread
+          type="blog_post"
+          targetId={post.id}
+          me={{ id: member.id, full_name: member.full_name, photo_url: member.photo_url ?? null }}
+          canModerate={isModerator}
+          canPost={post.status === "published"}
+          readOnlyNote="Reageren kan weer zodra dit verhaal zichtbaar is."
+          initialComments={comments}
+          variant="story"
+          heading="Reacties"
+        />
+      </section>
+
+      <p className="muted" style={{ textAlign: "center", fontSize: 14 }}>
+        Heb je zelf iets meegemaakt dat anderen verder helpt?{" "}
+        <Link href="/blog/schrijven" style={{ color: "var(--ink)", textDecoration: "underline", textUnderlineOffset: 2 }}>
+          Schrijf zelf een verhaal
+        </Link>
+      </p>
     </div>
   );
 }

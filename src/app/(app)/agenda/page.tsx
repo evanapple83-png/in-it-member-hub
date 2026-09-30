@@ -12,8 +12,8 @@ export default async function AgendaPage() {
   const { upcoming, past } = splitEventsByTime(await listPublishedEvents(member.id));
 
   return (
-    <div className="page">
-      <div className="hello">
+    <div className="page" data-reveal-group>
+      <div className="hello" data-reveal>
         <div>
           <h1>Agenda</h1>
           <p>Wat er de komende weken gebeurt. Meld je aan met één klik.</p>

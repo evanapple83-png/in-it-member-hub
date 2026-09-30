@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/app/EmptyState";
 import { Pills } from "@/components/app/Pills";
 import { useToast } from "@/components/app/Toast";
 import { JoinButton } from "@/components/app/community/JoinButton";
+import { CommentThread } from "@/components/comments/CommentThread";
 import { Icon } from "@/components/ui/icon";
 import { plural, relative } from "@/lib/format-nl";
 import type { CommunityMemberSummary, CommunityPost } from "@/lib/types";
@@ -44,6 +45,9 @@ export function GroupRoom({
   const [tab, setTab] = useState<"gesprek" | "leden">("gesprek");
   const [posts, setPosts] = useState(initialPosts);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
+  // Reacties: welke threads open staan en live tellers (startwaarde uit de server).
+  const [openThreads, setOpenThreads] = useState<Set<string>>(new Set());
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +114,19 @@ export function GroupRoom({
     if (!response?.ok) return toast("Dat lukte niet");
     toast("Bericht verwijderd");
     setPosts((current) => current.filter((p) => p.id !== postId));
+  }
+
+  function toggleThread(postId: string) {
+    setOpenThreads((current) => {
+      const next = new Set(current);
+      if (next.has(postId)) next.delete(postId);
+      else next.add(postId);
+      return next;
+    });
+  }
+
+  function setCommentCount(postId: string, n: number) {
+    setCommentCounts((current) => (current[postId] === n ? current : { ...current, [postId]: n }));
   }
 
   const count = people.length;
@@ -222,8 +239,14 @@ export function GroupRoom({
                 {posts.length ? (
                   posts.map((post) => {
                     const mine = post.author_id === me.id;
+                    const open = openThreads.has(post.id);
+                    const replies = commentCounts[post.id] ?? post.comment_count ?? 0;
                     return (
-                      <article key={post.id} className={cn("post", fresh.has(post.id) && "enter", post.status === "hidden" && "is-hidden")}>
+                      <article
+                        key={post.id}
+                        className={cn("post", post.status === "hidden" && "is-hidden")}
+                        {...(fresh.has(post.id) ? { "data-new": "" } : {})}
+                      >
                         <div className="who">
                           <Avatar name={post.author_name} photoUrl={post.author_photo} id={post.author_id ?? undefined} size="sm" />
                           <div>
@@ -235,20 +258,58 @@ export function GroupRoom({
                           </div>
                         </div>
                         <p className="txt">{post.body}</p>
-                        {canModerate || mine ? (
-                          <div className="bar">
-                            {canModerate ? (
-                              <button
-                                type="button"
-                                className="btn ghost sm"
-                                onClick={() => moderate(post.id, post.status === "hidden" ? "published" : "hidden")}
-                              >
-                                {post.status === "hidden" ? "Weer tonen" : "Verbergen"}
-                              </button>
-                            ) : null}
-                            <button type="button" className="btn ghost sm danger" onClick={() => remove(post.id)}>
-                              Verwijderen
+                        <div className="bar">
+                          {post.status === "published" ? (
+                            <button
+                              type="button"
+                              className={cn("react", open && "on")}
+                              aria-expanded={open}
+                              aria-controls={`reacties-${post.id}`}
+                              onClick={() => toggleThread(post.id)}
+                              data-press
+                            >
+                              <Icon name="chat" />
+                              {replies ? (
+                                <span>
+                                  <span className="num" data-count={replies}>
+                                    {replies}
+                                  </span>{" "}
+                                  {replies === 1 ? "reactie" : "reacties"}
+                                </span>
+                              ) : (
+                                "Reageer"
+                              )}
                             </button>
+                          ) : null}
+                          {canModerate || mine ? (
+                            <>
+                              <span className="spacer" />
+                              {canModerate ? (
+                                <button
+                                  type="button"
+                                  className="btn ghost sm"
+                                  onClick={() => moderate(post.id, post.status === "hidden" ? "published" : "hidden")}
+                                >
+                                  {post.status === "hidden" ? "Weer tonen" : "Verbergen"}
+                                </button>
+                              ) : null}
+                              <button type="button" className="btn ghost sm danger" onClick={() => remove(post.id)}>
+                                Verwijderen
+                              </button>
+                            </>
+                          ) : null}
+                        </div>
+                        {open && post.status === "published" ? (
+                          <div id={`reacties-${post.id}`}>
+                            <CommentThread
+                              type="community_post"
+                              targetId={post.id}
+                              me={{ id: me.id, full_name: me.full_name, photo_url: me.photo_url }}
+                              canModerate={canModerate}
+                              canPost={joined}
+                              readOnlyNote="Word lid van deze groep om mee te reageren."
+                              onCountChange={(n) => setCommentCount(post.id, n)}
+                            />
                           </div>
                         ) : null}
                       </article>

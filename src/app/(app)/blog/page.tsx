@@ -22,15 +22,15 @@ export default async function BlogPage() {
   const rest = posts.filter((post) => post.id !== top?.id);
 
   const write = (
-    <Link className="btn primary" href="/blog/schrijven">
+    <Link className="btn primary" href="/blog/schrijven" data-press>
       <Icon name="pen" />
       Schrijf een verhaal
     </Link>
   );
 
   return (
-    <div className="page">
-      <div className="hello">
+    <div className="page" data-reveal-group>
+      <div className="hello" data-reveal>
         <div>
           <h1>Verhalen</h1>
           <p>Leden schrijven over projecten, carrièrestappen en lessen.</p>
@@ -39,13 +39,13 @@ export default async function BlogPage() {
       </div>
 
       {posts.length === 0 ? (
-        <div className="panel">
+        <div className="panel" data-reveal>
           <EmptyState
             icon="book"
             title="Nog geen verhalen"
             text="Het eerste verhaal staat meteen bovenaan op Vandaag. Een project, een overstap, iets wat je had willen weten toen je begon."
             action={
-              <Link className="btn primary" href="/blog/schrijven">
+              <Link className="btn primary" href="/blog/schrijven" data-press>
                 Schrijf het eerste verhaal
               </Link>
             }
@@ -55,7 +55,7 @@ export default async function BlogPage() {
         <>
           {top ? <FeatureStory post={top} kicker={showcase && top.id === showcase.id ? "Verhaal van de week" : "Nieuwste verhaal"} /> : null}
           {rest.length ? (
-            <div className="tiles">
+            <div className="tiles" data-reveal>
               {rest.map((post) => (
                 <StoryTile key={post.id} post={post} />
               ))}
