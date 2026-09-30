@@ -18,6 +18,7 @@ const communitySchema = z.object({
   name: z.string().min(2).max(80),
   description: z.string().max(500).optional().or(z.literal("")),
   category: z.enum(["professional", "social"]).optional(),
+  cover_image_url: z.string().url().max(500).optional().or(z.literal("")),
 });
 
 export async function POST(request: Request) {
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
     name: data.name,
     description: data.description || null,
     category: data.category ?? "professional",
+    coverImageUrl: data.cover_image_url || null,
   });
 
   return NextResponse.json({ community });

@@ -1,10 +1,6 @@
-import { AdminClient } from "@/components/admin/AdminClient";
-import { PageShell } from "@/components/layout/PageShell";
+import { redirect } from "next/navigation";
 
+// Pending approvals now live under Aanvragen.
 export default function PendingMembersPage() {
-  return (
-    <PageShell eyebrow="Admin" title="Pending approvals" description="Only approved and consented members can appear publicly.">
-      <AdminClient view="pending" />
-    </PageShell>
-  );
+  redirect("/admin/requests");
 }

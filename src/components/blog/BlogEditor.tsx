@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input, Textarea } from "@/components/ui/input";
+import { Icon } from "@/components/ui/icon";
 
 // Create + edit form for member blog posts. With `postId` it PATCHes an existing post,
 // otherwise it POSTs a new one.
@@ -51,12 +49,12 @@ export function BlogEditor({
   const valid = title.trim().length >= 3 && body.trim().length >= 10;
 
   return (
-    <div className="grid max-w-3xl gap-5 rounded-[2rem] border border-charcoal/10 bg-white/82 p-7 shadow-sm">
-      <div className="grid gap-1.5">
-        <label htmlFor="blog-title" className="text-sm font-bold text-charcoal">
+    <section className="panel cform">
+      <div className="f">
+        <label htmlFor="blog-title" className="lbl">
           Titel
         </label>
-        <Input
+        <input
           id="blog-title"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
@@ -64,39 +62,45 @@ export function BlogEditor({
           maxLength={140}
         />
       </div>
-      <div className="grid gap-1.5">
-        <label htmlFor="blog-body" className="text-sm font-bold text-charcoal">
+      <div className="f">
+        <label htmlFor="blog-body" className="lbl">
           Verhaal
         </label>
-        <Textarea
+        <textarea
           id="blog-body"
           value={body}
           onChange={(event) => setBody(event.target.value)}
-          placeholder="Deel je ervaring met de community: een project, een carrièrestap, een les die je leerde..."
+          placeholder="Een project, een overstap, een les die je leerde. Schrijf het zoals je het aan een collega zou vertellen."
           rows={14}
         />
+        <span className="hint">Witregels blijven staan. Alleen ingelogde leden kunnen je verhaal lezen.</span>
       </div>
-      <div className="grid gap-1.5">
-        <label htmlFor="blog-cover" className="text-sm font-bold text-charcoal">
-          Coverafbeelding (optioneel, URL)
+      <div className="f">
+        <label htmlFor="blog-cover" className="lbl">
+          Omslagfoto (optioneel)
         </label>
-        <Input
+        <input
           id="blog-cover"
           value={coverImageUrl}
           onChange={(event) => setCoverImageUrl(event.target.value)}
-          placeholder="https://..."
+          placeholder="Plak hier het webadres van een foto"
           inputMode="url"
         />
+        <span className="hint">Laat je dit leeg, dan krijgt je verhaal een beeld uit de IN-IT-huisstijl.</span>
       </div>
 
-      {error ? <p className="text-sm font-semibold text-date">{error}</p> : null}
+      {error ? (
+        <p className="err-line" role="alert">
+          {error}
+        </p>
+      ) : null}
 
-      <div className="flex justify-end">
-        <Button onClick={submit} disabled={busy || !valid}>
-          <Send className="h-4 w-4" />
+      <div className="acts">
+        <button type="button" className="btn primary" onClick={submit} disabled={busy || !valid}>
+          <Icon name="send" />
           {postId ? "Wijzigingen opslaan" : "Publiceren"}
-        </Button>
+        </button>
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,0 +1,44 @@
+/* Community screens (Vandaag, Leden, Groepen, Agenda, Verhalen): small additions on top of app.css. */
+@layer components {
+  /* card = link around cover + body, footer with its own buttons stays outside the link */
+  .tile > .tl { display: flex; flex-direction: column; gap: 10px; min-width: 0; flex: 1; }
+  .tile > .tl:focus-visible { outline-offset: 4px; border-radius: 13px; }
+  .feature > [data-cover] > .cover { height: 100%; }
+  [data-hero] > .cover { border-radius: 0; }
+
+  .date.big { width: 64px; height: 68px; }
+  .date.big b { font-size: 24px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip.ok { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
+  .btn.danger { color: var(--accent); }
+  .btn.danger:hover { background: var(--accent-soft); }
+  .btn.joined { transition: background-color .2s var(--ease), color .2s var(--ease), transform .14s var(--ease); }
+  .btn.joined svg { animation: pop .3s var(--ease); }
+
+  .post.is-hidden { opacity: .6; }
+  .post .bar .note-hidden { font-size: 12.5px; color: var(--muted); }
+  .rsvp button:disabled { cursor: progress; }
+  .quiet .erow { opacity: .75; }
+  .quiet .erow:hover { opacity: 1; }
+
+  .story { display: grid; gap: 16px; }
+  .story .prose { white-space: pre-line; overflow-wrap: anywhere; }
+  .story img.lead { width: 100%; max-height: 420px; object-fit: cover; border-radius: 14px; }
+
+  .cform { display: grid; gap: 16px; }
+  .cform .f { display: grid; gap: 6px; }
+  .cform input, .cform textarea {
+    width: 100%; border: 1px solid var(--line-strong); border-radius: 14px; padding: 11px 14px;
+    outline: 0; font-size: 15px; background: #fff; transition: border-color .15s;
+  }
+  .cform input { height: 46px; padding-block: 0; }
+  .cform textarea { min-height: 280px; resize: vertical; line-height: 1.6; }
+  .cform input:focus, .cform textarea:focus { border-color: var(--navy); }
+  .cform .hint { font-size: 12.5px; color: var(--muted); }
+  .cform .acts { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+
+  .gb .acts, .hello .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .modbar { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--line); }
+  .err-line { color: var(--accent); font-size: 13.5px; }
+}

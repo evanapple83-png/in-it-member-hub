@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Pencil, Trash2, Trophy } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
 
 // Author + beheerder actions on a blog post detail page.
 export function BlogPostActions({
@@ -61,34 +60,30 @@ export function BlogPostActions({
   if (!isAuthor && !isModerator) return null;
 
   return (
-    <div className="mt-6 border-t border-charcoal/8 pt-4">
-      <div className="flex flex-wrap gap-2">
-        {isAuthor || isModerator ? (
-          <Button asChild size="sm" variant="outline">
-            <Link href={`/blog/${slug}/bewerken`}>
-              <Pencil className="h-4 w-4" />
-              Bewerken
-            </Link>
-          </Button>
-        ) : null}
-        {isModerator ? (
-          <>
-            <Button size="sm" variant="ghost" disabled={busy} onClick={() => patch({ status: status === "hidden" ? "published" : "hidden" })}>
-              {status === "hidden" ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              {status === "hidden" ? "Tonen" : "Verbergen"}
-            </Button>
-            <Button size="sm" variant="ghost" disabled={busy} onClick={() => patch({ showcase: !isShowcase })}>
-              <Trophy className="h-4 w-4" />
-              {isShowcase ? "Showcase verwijderen" : "Maak Showcase van de week"}
-            </Button>
-          </>
-        ) : null}
-        <Button size="sm" variant="ghost" disabled={busy} onClick={remove}>
-          <Trash2 className="h-4 w-4" />
-          Verwijderen
-        </Button>
-      </div>
-      {error ? <p className="mt-2 text-sm font-semibold text-date">{error}</p> : null}
+    <div className="modbar">
+      <Link className="btn ghost sm" href={`/blog/${slug}/bewerken`}>
+        <Icon name="pen" />
+        Bewerken
+      </Link>
+      {isModerator ? (
+        <>
+          <button type="button" className="btn ghost sm" disabled={busy} onClick={() => patch({ status: status === "hidden" ? "published" : "hidden" })}>
+            {status === "hidden" ? "Weer tonen" : "Verbergen"}
+          </button>
+          <button type="button" className="btn ghost sm" disabled={busy} onClick={() => patch({ showcase: !isShowcase })}>
+            <Icon name="book" />
+            {isShowcase ? "Niet meer uitlichten" : "Maak verhaal van de week"}
+          </button>
+        </>
+      ) : null}
+      <button type="button" className="btn ghost sm danger" disabled={busy} onClick={remove}>
+        Verwijderen
+      </button>
+      {error ? (
+        <p className="err-line" role="alert" style={{ flexBasis: "100%" }}>
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

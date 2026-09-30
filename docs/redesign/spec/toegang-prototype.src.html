@@ -1,0 +1,430 @@
+<div class="stagebar">
+  <div class="title"><img src="__LOGO__" alt="" width="26" height="26" style="border-radius:8px"> IN-IT toegang en beheer <small>klikbaar prototype</small></div>
+  <div class="controls">
+    <div class="seg" data-seg="flow"><span class="thumb"></span><button type="button" data-set="flow:new" aria-pressed="true">Nieuw lid</button><button type="button" data-set="flow:login" aria-pressed="false">Inloggen</button><button type="button" data-set="flow:admin" aria-pressed="false">Beheer</button></div>
+    <div class="seg" data-seg="device"><span class="thumb"></span><button type="button" data-set="device:desktop" aria-pressed="true">Desktop</button><button type="button" data-set="device:mobile" aria-pressed="false">Mobiel</button></div>
+    <button type="button" class="btn sm ghost" data-action="reset" style="background:rgba(255,255,255,.6);border-color:transparent">Opnieuw</button>
+  </div>
+</div>
+<div class="flowbar" id="flowbar"></div>
+<div class="stage" id="stage"><div class="app" id="app"></div></div>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const LOGO = "__LOGO__";
+const HUB_URL = "https://claude.ai/artifact/L7E1kcU1SM96FZc855aFWf";
+const I = {
+  home: '<path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/>',
+  users: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.9-4.8 5.5-4.8s4.9 1.8 5.5 4.8M16 5.2a3 3 0 0 1 0 5.6M17.5 14.6c1.6.6 2.7 2.1 3 4.4"/>',
+  groups: '<circle cx="12" cy="7.5" r="3"/><circle cx="5.8" cy="16" r="2.6"/><circle cx="18.2" cy="16" r="2.6"/><path d="M9.6 10.8 7.6 13.6M14.4 10.8l2 2.8"/>',
+  cal: '<path d="M5 7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2zM5 10h14M9 3v4M15 3v4"/>',
+  book: '<path d="M5 5.5A1.5 1.5 0 0 1 6.5 4H18v14H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H18M9 8h5"/>',
+  search: '<circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  lock: '<rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+  info: '<circle cx="12" cy="12" r="8"/><path d="M12 11v5M12 8h.01"/>',
+  mail: '<rect x="4" y="6" width="16" height="12" rx="2"/><path d="m4.5 7.5 7.5 5.5 7.5-5.5"/>',
+  key: '<circle cx="8" cy="14" r="3.5"/><path d="M10.5 11.5 19 3M16 6l2.5 2.5M14 8l2 2"/>',
+  shield: '<path d="M12 3.5 19 6v5.5c0 4.3-3 7.6-7 9-4-1.4-7-4.7-7-9V6z"/>',
+  grid: '<rect x="4.5" y="4.5" width="6" height="6" rx="1.5"/><rect x="13.5" y="4.5" width="6" height="6" rx="1.5"/><rect x="4.5" y="13.5" width="6" height="6" rx="1.5"/><rect x="13.5" y="13.5" width="6" height="6" rx="1.5"/>',
+  inbox: '<path d="M4 13.5 6.5 5h11L20 13.5V18a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18zM4 13.5h4.5l1.5 2.5h4l1.5-2.5H20"/>',
+  logout: '<path d="M10 5H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4M14 8l4 4-4 4M18 12H9"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  copy: '<rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/>',
+  pen: '<path d="M5 19l1-4 9.5-9.5a2.1 2.1 0 0 1 3 3L9 18zM13.5 7.5l3 3"/>',
+  clock: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/>',
+};
+const ic = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
+const av = (ini, tint, cls = "") => `<span class="av ${cls} ${ini ? "" : "slot"}" style="${ini ? `background:${tint}` : ""}">${ini}</span>`;
+const initials = (n) => n.trim().split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+
+/* ── gedeelde staat: flows praten met elkaar ── */
+const fresh = () => ({
+  flow: "new", device: "desktop",
+  nu: { stage: "code", code: "", codeState: null, name: "", role: "", place: "", field: [], consent: false, triedPath: null, reason: "" },
+  login: { stage: "login", as: null },
+  admin: { view: "overview", rejectOpen: false, log: [] },
+  invites: [
+    { code: "INIT-2F9A61C4", status: "actief", expires: "1 okt, 16:00", by: "Voorbeeld", note: "Voorbeeldcode voor deze demo", demo: true },
+    { code: "INIT-C485••••", status: "actief", expires: "1 okt, 10:48", by: "Evan Poul", note: "Vandaag aangemaakt", masked: true },
+  ],
+});
+let S = fresh();
+const NEWNAME = () => S.nu.name.trim() || "[Naam van LinkedIn]";
+const newIni = () => (S.nu.name.trim() ? initials(S.nu.name) : "");
+
+/* ── flowkaart ───────────────────────────────── */
+function renderFlowbar() {
+  const fb = $("#flowbar");
+  const node = (label, st, alt) => `<span class="n ${st} ${alt ? "alt" : ""}">${st === "done" ? ic("check") : ""}${label}</span>`;
+  const arr = '<span class="a">→</span>';
+  if (S.flow === "new") {
+    const order = ["code", "linkedin", "profile", "waiting", "approved", "hub"];
+    const labels = ["Uitnodigingscode", "LinkedIn", "Profiel", "Wachten op goedkeuring", "Goedgekeurd", "Community"];
+    const cur = S.nu.stage === "rejected" ? 3 : order.indexOf(S.nu.stage);
+    fb.innerHTML = '<span class="lbl">Nieuw lid</span>' + labels.map((l, i) => node(l, i < cur ? "done" : i === cur && S.nu.stage !== "rejected" ? "now" : "")).join(arr)
+      + `<span class="a" style="margin-left:6px">of</span>` + node("Afgewezen", S.nu.stage === "rejected" ? "now" : "", true);
+  } else if (S.flow === "login") {
+    const st = S.login.stage;
+    const res = S.login.as;
+    fb.innerHTML = '<span class="lbl">Ander apparaat</span>' + node("Inloggen", st === "login" ? "now" : "done") + arr + node("LinkedIn", st === "li" ? "now" : st === "login" ? "" : "done") + arr
+      + node("Goedgekeurd: community", st === "result" && res === "approved" ? "now" : "", true) + node("Wacht nog: wachtscherm", st === "result" && res === "pending" ? "now" : "", true) + node("Onbekend: code of aanvraag", st === "result" && res === "unknown" ? "now" : "", true);
+  } else {
+    fb.innerHTML = '<span class="lbl">Beheer</span><span class="n now">Eigen omgeving op /beheer, alleen voor beheerders</span><span class="n">Bereikbaar via het accountmenu in de community</span>';
+  }
+}
+
+/* ── schermen ────────────────────────────────── */
+function url(path, tryButtons) {
+  return `<div class="url"><span class="dots"><i></i><i></i><i></i></span><span class="addr">${ic("lock")}init-community.nl<b>${esc(path)}</b></span>${tryButtons ? `<span class="try"><span>Probeer:</span><button type="button" data-action="try:/vandaag">/vandaag</button><button type="button" data-action="try:/leden">/leden</button><button type="button" data-action="try:/beheer">/beheer</button></span>` : ""}</div>`;
+}
+function authShell(inner, path, img = "c-wide") {
+  return url(path) + `<div class="screen auth enter"><div class="formside"><div class="form">${inner}</div></div>
+    <div class="imgside"><div class="cover ${img}"><div class="cover-in"></div><div class="quote"><b>Iraqi Network of Information Technology</b><span>Een besloten netwerk van IT-professionals met Iraakse roots in Nederland.</span></div></div></div></div>`;
+}
+const stepper = (n) => `<div class="stepper" aria-label="Stap ${n} van 3">${[1, 2, 3].map((i) => `<i class="${i <= n ? "done" : ""}"><b></b></i>`).join("")}</div>`;
+const logo = `<div class="logo"><img src="${LOGO}" alt="">IN-IT</div>`;
+
+function vCode() {
+  const st = S.nu.codeState;
+  const ok = st && st.ok;
+  return authShell(`${logo}${stepper(ok ? 1 : 0)}
+    <div><h1>Je bent uitgenodigd</h1><p class="sub" style="margin-top:6px">Vul de code in die je van een beheerder kreeg. Hij is 24 uur geldig en werkt één keer.</p></div>
+    <div style="display:grid;gap:8px"><label class="lbl" for="code">Uitnodigingscode</label>
+      <div class="codefield ${st ? (st.ok ? "ok" : "err") : ""}" id="cf"><span class="pre">INIT-</span><input id="code" maxlength="8" autocomplete="off" spellcheck="false" placeholder="2F9A61C4" value="${esc(S.nu.code)}" aria-describedby="cmsg"></div>
+      <div id="cmsg">${st ? `<p class="msg ${st.ok ? "ok" : "err"}">${ic(st.ok ? "check" : "info")}${st.text}</p>` : `<p class="msg info">${ic("info")}Voor deze demo: gebruik INIT-2F9A61C4 of maak een code aan onder Beheer.</p>`}</div></div>
+    ${ok ? `<button class="btn li block" type="button" data-action="li-new"><span class="in">in</span>Account maken met LinkedIn</button><p class="fine">We gebruiken je naam, foto en e-mailadres van LinkedIn. Je profiel is pas zichtbaar na goedkeuring.</p>`
+      : `<button class="btn dark block" type="button" data-action="check-code">Code controleren</button>`}
+    <div class="or">al lid</div>
+    <button class="btn ghost block" type="button" data-action="goto-login">Inloggen met LinkedIn</button>
+    <p class="fine">Geen code? <button type="button" class="link" style="border:0;padding:0;text-decoration:underline;background:none" data-action="toast:Opent het formulier om toegang aan te vragen">Vraag toegang aan</button></p>`, "/join");
+}
+function vProfile() {
+  const n = S.nu;
+  const fields = ["Software", "Cloud", "Security", "Data", "Product en design", "Infra", "Student"];
+  const can = n.consent && n.role.trim();
+  return authShell(`${logo}${stepper(2)}
+    <div><h1>Nog even je profiel</h1><p class="sub" style="margin-top:6px">Zo weet de coördinator wie je bent. Je kunt alles later aanpassen.</p></div>
+    <div class="fgrid">
+      <label><span class="lbl">Naam</span><input id="pname" value="${esc(n.name)}" placeholder="Komt van LinkedIn"></label>
+      <label><span class="lbl">Rol of functie</span><input id="prole" value="${esc(n.role)}" placeholder="Bijvoorbeeld cloud engineer"></label>
+      <label><span class="lbl">Woonplaats</span><input id="pplace" value="${esc(n.place)}" placeholder="Bijvoorbeeld Rotterdam"></label>
+      <div style="display:grid;gap:6px"><span class="lbl">Vakgebied</span><div class="choice">${fields.map((f) => `<button type="button" class="${n.field.includes(f) ? "on" : ""}" data-action="field:${f}" aria-pressed="${n.field.includes(f)}">${f}</button>`).join("")}</div></div>
+      <div class="consent ${n.consent ? "on" : ""}" role="checkbox" tabindex="0" aria-checked="${n.consent}" data-action="consent"><span class="box">${ic("check")}</span><span>Ik ga akkoord dat leden van IN-IT mijn profiel zien zodra ik ben goedgekeurd. Per veld kies ik later wat zichtbaar is.</span></div>
+    </div>
+    <button class="btn primary block" type="button" data-action="submit-profile" ${can ? "" : "disabled"}>Aanvraag versturen</button>
+    <p class="fine">${can ? "Na het versturen beoordeelt de coördinator je aanvraag." : "Vul je rol in en geef akkoord om te versturen."}</p>`, "/welkom/profiel", "c-arch");
+}
+function vWait(path) {
+  const n = S.nu, approved = n.stage === "approved", rejected = n.stage === "rejected";
+  if (rejected) return url(path || "/wachten") + `<div class="screen wait enter"><div class="wcard"><div class="cover c-canal"><div class="cover-in"></div></div><div class="wb">
+    <div><h1>Je aanvraag is niet goedgekeurd</h1><p class="sub" style="margin-top:6px">De coördinator heeft je aanvraag bekeken en kan je nu geen toegang geven.</p></div>
+    ${n.reason ? `<div class="note">${ic("info")}<span><b>Toelichting:</b> ${esc(n.reason)}</span></div>` : ""}
+    <p class="sub">Denk je dat dit niet klopt? Mail de coördinator op <b style="user-select:all;color:var(--ink)">evanpoul83@gmail.com</b>.</p>
+    <div class="wcta"><button class="btn ghost" type="button" data-action="toast:Je bent uitgelogd">${ic("logout")}Uitloggen</button></div></div></div></div>`;
+  const tried = path && path !== "/wachten";
+  return url(path || "/wachten", !approved) + `<div class="screen wait enter"><div class="wcard ${approved ? "approved" : ""}"><div class="cover ${approved ? "c-wide" : "c-wave"}"><div class="cover-in"></div></div><div class="wb">
+    ${tried && !approved ? `<div class="note">${ic("lock")}<span>Je probeerde <b>${esc(path)}</b> te openen. Tot je bent goedgekeurd kom je steeds hier uit.</span></div>` : ""}
+    <div><h1>${approved ? `Welkom, ${esc(S.nu.name.trim().split(" ")[0] || "nieuw lid")}. Je bent binnen.` : "Je aanvraag ligt bij de coördinator"}</h1>
+      <p class="sub" style="margin-top:6px">${approved ? "Je profiel is goedgekeurd. Vanaf nu log je op elk apparaat in met LinkedIn, zonder code." : "Meestal binnen een dag. Deze pagina gaat vanzelf open zodra je bent goedgekeurd, en je krijgt een mail."}</p></div>
+    <ol class="tl">
+      <li class="done"><span class="dot">${ic("check")}</span><span><b>Uitnodigingscode</b><small>INIT-${esc(S.nu.code || "2F9A61C4")} gebruikt</small></span></li>
+      <li class="done"><span class="dot">${ic("check")}</span><span><b>Account via LinkedIn</b><small>${esc(NEWNAME())}</small></span></li>
+      <li class="done"><span class="dot">${ic("check")}</span><span><b>Profiel ingevuld</b><small>${esc(S.nu.role || "[Rol]")}${S.nu.place ? ", " + esc(S.nu.place) : ""}</small></span></li>
+      <li class="${approved ? "done pop" : "now"}"><span class="dot">${approved ? ic("check") : ""}</span><span><b>${approved ? "Goedgekeurd" : "Beoordeling door de coördinator"}</b><small>${approved ? "Zojuist" : "Bezig"}</small></span></li>
+    </ol>
+    ${approved ? `<div class="wcta"><button class="btn primary" type="button" data-action="enter-hub">Naar de community ${ic("arrow")}</button></div>`
+      : `<div class="poll"><span class="spin" aria-hidden="true"></span>We kijken elke 30 seconden of je bent goedgekeurd.</div>
+      <div class="wcta"><button class="btn ghost" type="button" data-action="edit-profile">${ic("pen")}Profiel aanpassen</button><button class="btn ghost" type="button" data-action="toast:Je bent uitgelogd. Log later opnieuw in met LinkedIn">${ic("logout")}Uitloggen</button></div>`}
+  </div></div></div>`;
+}
+function vLogin() {
+  return authShell(`${logo}
+    <div><h1>Welkom terug</h1><p class="sub" style="margin-top:6px">Log in met het LinkedIn-account waarmee je lid bent geworden. Een code heb je niet meer nodig.</p></div>
+    <button class="btn li block" type="button" data-action="li-login"><span class="in">in</span>Inloggen met LinkedIn</button>
+    <div class="or">nieuw bij IN-IT</div>
+    <button class="btn ghost block" type="button" data-action="goto-code">${ic("key")}Ik heb een uitnodigingscode</button>`, "/inloggen", "c-canal");
+}
+function vUnknown() {
+  return authShell(`${logo}
+    <div><h1>We kennen dit LinkedIn-account nog niet</h1><p class="sub" style="margin-top:6px">Misschien werd je lid met een ander LinkedIn-account. Log dan daarmee in. Ben je nieuw, gebruik dan je uitnodigingscode.</p></div>
+    <button class="btn li block" type="button" data-action="li-login"><span class="in">in</span>Ander LinkedIn-account proberen</button>
+    <button class="btn dark block" type="button" data-action="goto-code">${ic("key")}Ik heb een uitnodigingscode</button>
+    <button class="btn ghost block" type="button" data-action="toast:Opent het formulier om toegang aan te vragen">Toegang aanvragen zonder code</button>`, "/inloggen", "c-bridge");
+}
+function vHub(name, ini, tint, isAdmin) {
+  return url("/vandaag") + `<div class="screen hub enter">
+    <aside class="side"><div class="brand"><img src="${LOGO}" alt="">IN-IT</div>
+      <nav class="nav"><span class="ind" style="transform:translateY(0)"></span>${[["home", "Vandaag"], ["users", "Leden"], ["groups", "Groepen"], ["cal", "Agenda"], ["book", "Verhalen"]].map(([i, l], k) => `<button type="button" class="${k === 0 ? "on" : ""}" data-action="toast:De community zelf staat in het andere prototype">${ic(i)}${l}</button>`).join("")}</nav>
+      <div class="grow"></div>${isAdmin ? `<button class="out" type="button" data-action="goto-admin">${ic("shield")}Beheer</button>` : ""}</aside>
+    <header class="top"><div class="brand-m"><img src="${LOGO}" alt="">IN-IT</div><div class="sp"></div>
+      ${isAdmin ? `<button class="btn dark sm" type="button" data-action="goto-admin">${ic("shield")}Beheer</button>` : ""}
+      <button class="me" type="button"><span class="av ${ini ? "" : "slot"}" style="${ini ? `background:${tint}` : ""}">${ini}</span><span class="desk-only"><b>${esc(name)}</b><small>${isAdmin ? "Beheerder" : "Lid"}</small></span></button></header>
+    <main class="main"><div class="page">
+      <div class="hello"><div><h1>Goedemiddag, ${esc(name.split(" ")[0].replace(/^\[.*/, "nieuw lid"))}</h1><p>dinsdag 30 september 2026</p></div></div>
+      <section class="panel" style="display:grid;gap:10px"><h3>Je bent binnen</h3><p class="muted">Dit is de community zoals in het eerste prototype: Vandaag, Leden, Groepen, Agenda en Verhalen.</p>
+        <a class="btn ghost" style="justify-self:start;text-decoration:none" href="${HUB_URL}" target="_blank" rel="noopener">Open het community-prototype ${ic("arrow")}</a></section>
+    </div></main></div>`;
+}
+
+/* beheer */
+const ADMIN_NAV = [["overview", "Overzicht", "grid"], ["requests", "Aanvragen", "inbox"], ["members", "Leden", "users"], ["invites", "Uitnodigingen", "key"], ["groups", "Groepen", "groups"], ["events", "Activiteiten", "cal"]];
+const pendingCount = () => (S.nu.stage === "waiting" ? 1 : 0);
+function vAdmin() {
+  const v = S.admin.view;
+  const body = { overview: aOverview, requests: aRequests, members: aMembers, invites: aInvites, groups: aGroups, events: aEvents }[v]();
+  const idx = ADMIN_NAV.findIndex(([k]) => k === v);
+  return url("/beheer" + (v === "overview" ? "" : "/" + { requests: "aanvragen", members: "leden", invites: "uitnodigingen", groups: "groepen", events: "activiteiten" }[v])) + `<div class="screen admin enter">
+    <aside class="side"><div class="brand"><img src="${LOGO}" alt=""><span>IN-IT<small>Beheer</small></span></div>
+      <nav class="nav" id="anav"><span class="ind" style="transform:translateY(${(S.admin.prevIdx ?? idx) * 48}px)"></span>${ADMIN_NAV.map(([k, l, i]) => `<button type="button" class="${k === v ? "on" : ""}" data-action="aview:${k}">${ic(i)}${l}${k === "requests" && pendingCount() ? `<span class="count num">${pendingCount()}</span>` : ""}</button>`).join("")}</nav>
+      <div class="grow"></div><button class="out" type="button" data-action="goto-hub-admin">${ic("back")}Naar de community</button></aside>
+    <header class="top"><div class="brand-m"><img src="${LOGO}" alt="">Beheer</div>
+      <button class="search" type="button" data-action="toast:Zoeken in beheer: leden, codes, aanvragen"><span>Zoek een lid of code</span><i class="go">${ic("search")}</i></button>
+      <div class="sp"></div><button class="btn primary" type="button" data-action="new-invite">${ic("plus")}<span class="desk-only">Nieuwe uitnodiging</span></button>
+      <button class="me" type="button" data-action="goto-hub-admin"><span class="av" style="background:#f3dcd4">EP</span><span class="desk-only"><b>Evan Poul</b><small>Beheerder</small></span></button></header>
+    <main class="main"><div class="page">${body}</div></main>
+    <nav class="tabs">${ADMIN_NAV.slice(0, 4).map(([k, l, i]) => `<button type="button" class="${k === v ? "on" : ""}" data-action="aview:${k}">${ic(i)}${l.replace("Uitnodigingen", "Codes")}</button>`).join("")}<span class="ind" style="transform:translateX(${Math.max(0, Math.min(idx, 3)) * 100}%);opacity:${idx < 4 ? 1 : 0}"></span></nav>
+  </div>`;
+}
+function reqCard() {
+  if (S.nu.stage !== "waiting") return "";
+  return `<div class="req" id="req"><span class="av ${newIni() ? "" : "slot"}" style="${newIni() ? "background:#dcebe2" : ""}">${newIni()}</span>
+    <div class="t"><b>${esc(NEWNAME())}</b><small>${esc(S.nu.role || "[Rol]")}${S.nu.place ? ", " + esc(S.nu.place) : ""}${S.nu.field.length ? " · " + esc(S.nu.field.join(", ")) : ""}</small><small>Via code INIT-${esc(S.nu.code || "2F9A61C4")} · zojuist</small></div>
+    <div class="acts"><button class="btn ghost sm" type="button" data-action="reject-open">Afwijzen</button><button class="btn primary sm" type="button" data-action="approve">${ic("check")}Goedkeuren</button></div>
+    ${S.admin.rejectOpen ? `<div class="reject"><label class="lbl" for="rr">Toelichting voor de aanvrager (optioneel)</label><textarea id="rr" placeholder="Bijvoorbeeld: we konden je niet koppelen aan het netwerk"></textarea><div class="acts" style="justify-content:flex-end;display:flex;gap:8px"><button class="btn ghost sm" type="button" data-action="reject-cancel">Annuleren</button><button class="btn sm" style="background:var(--accent);color:#fff" type="button" data-action="reject">Afwijzen</button></div></div>` : ""}
+  </div>`;
+}
+function aOverview() {
+  const active = S.invites.filter((i) => i.status === "actief").length;
+  return `<div class="hello"><div><h1>Overzicht</h1><p>Wat er op jou wacht.</p></div></div>
+    <div class="kpis"><span class="kpi"><b class="num">${pendingCount()}</b>wacht op goedkeuring</span><span class="kpi"><b class="num">${active}</b>actieve codes</span><span class="kpi"><b class="num">${2 + (S.nu.stage === "approved" || S.nu.stage === "hub" ? 1 : 0)}</b>leden</span></div>
+    <div class="cols"><div class="stack">
+      <section class="panel"><div class="ph"><h3>Wacht op goedkeuring ${pendingCount() ? `<span class="badge accent num">${pendingCount()}</span>` : ""}</h3></div>
+        ${pendingCount() ? reqCard() : `<div class="empty" style="padding:20px"><span class="ring">${ic("check")}</span><p>Niemand wacht. Nieuwe aanvragen verschijnen hier en in de teller links.</p>${S.nu.stage === "code" ? `<button class="btn ghost sm" type="button" data-set="flow:new">Doorloop de nieuw-lid-flow</button>` : ""}</div>`}</section>
+      <section class="panel"><div class="ph"><h3>Toegangsaanvragen zonder code</h3></div><p class="muted" style="font-size:14px">Geen open aanvragen. Mensen zonder code kunnen via de publieke site toegang vragen of voorgedragen worden; die komen hier binnen.</p></section>
+    </div><aside class="stack aside">
+      <section class="panel"><div class="ph"><h3>Actieve codes</h3><button class="link" type="button" data-action="aview:invites">Alle</button></div>${S.invites.filter((i) => i.status === "actief").slice(0, 3).map((i) => `<div class="person"><span class="t"><b class="code">${esc(i.code)}</b><small>tot ${esc(i.expires)}</small></span></div>`).join("") || `<p class="muted">Geen actieve codes.</p>`}</section>
+      <section class="panel"><div class="ph"><h3>Recent</h3></div><div class="feed">${[...S.admin.log].reverse().slice(0, 5).map((l) => `<div>${esc(l)}<small>zojuist</small></div>`).join("") || `<p class="muted" style="font-size:14px">Nog geen acties in deze sessie.</p>`}</div></section>
+    </aside></div>`;
+}
+function aRequests() {
+  return `<div class="hello"><div><h1>Aanvragen</h1><p>Nieuwe accounts en toegangsaanvragen, op één plek.</p></div></div>
+    <section class="panel"><div class="ph"><h3>Accounts die wachten ${pendingCount() ? `<span class="badge accent num">1</span>` : ""}</h3></div>${pendingCount() ? reqCard() : `<p class="muted">Niemand wacht op goedkeuring.</p>`}</section>
+    <section class="panel"><div class="ph"><h3>Toegangsaanvragen zonder code</h3></div><p class="muted">Geen open aanvragen.</p></section>`;
+}
+function aMembers() {
+  const rows = [
+    { n: "Evan Poul", ini: "EP", t: "#f3dcd4", r: "Beheerder", st: "ok", s: "Goedgekeurd", since: "19 mei 2026" },
+    { n: "Ashraf Arab", ini: "AA", t: "#dbe3f1", r: "Beheerder", st: "ok", s: "Goedgekeurd", since: "20 mei 2026" },
+  ];
+  if (["waiting", "approved", "hub", "rejected"].includes(S.nu.stage)) rows.push({ n: NEWNAME(), ini: newIni(), t: "#dcebe2", r: "Lid", st: { waiting: "wait", rejected: "no" }[S.nu.stage] || "ok", s: { waiting: "Wacht op goedkeuring", rejected: "Afgewezen" }[S.nu.stage] || "Goedgekeurd", since: "30 sep 2026", fresh: true });
+  return `<div class="hello"><div><h1>Leden</h1><p>Status, rol en zichtbaarheid per lid.</p></div></div>
+    <section class="panel"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Lid</th><th>Rol</th><th>Status</th><th>Sinds</th><th></th></tr></thead><tbody>
+    ${rows.map((r) => `<tr class="${r.fresh ? "fresh" : ""}"><td><span class="who2">${av(r.ini, r.t, "sm")}<b>${esc(r.n)}</b></span></td><td>${r.r}</td><td><span class="st ${r.st}">${r.s}</span></td><td class="num">${r.since}</td><td style="text-align:right"><button class="link" type="button" data-action="toast:Opent lid: rol, zichtbaarheid, deactiveren">Beheren</button></td></tr>`).join("")}
+    </tbody></table></div></section>`;
+}
+function aInvites() {
+  return `<div class="hello"><div><h1>Uitnodigingen</h1><p>Codes zijn 24 uur geldig en werken één keer. Alleen voor de eerste aanmelding.</p></div><button class="btn primary" type="button" data-action="new-invite">${ic("plus")}Nieuwe uitnodiging</button></div>
+    <section class="panel"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Code</th><th>Status</th><th>Geldig tot</th><th>Door</th><th>Notitie</th></tr></thead><tbody>
+    ${S.invites.map((i) => `<tr class="${i.fresh ? "fresh" : ""}"><td class="code">${esc(i.code)}</td><td><span class="st ${i.status === "actief" ? "ok" : "off"}">${i.status}</span></td><td class="num">${esc(i.expires)}</td><td>${esc(i.by)}</td><td class="muted">${esc(i.note)}</td></tr>`).join("")}
+    </tbody></table></div></section>`;
+}
+function aGroups() {
+  const g = [["Security specialists", "Vakgroep"], ["Engineers", "Vakgroep"], ["Product & design", "Vakgroep"], ["Voetbal", "Sociaal"]];
+  return `<div class="hello"><div><h1>Groepen</h1><p>Aanmaken, omslagfoto kiezen, beheerders aanwijzen.</p></div><button class="btn primary" type="button" data-action="toast:Opent het formulier voor een nieuwe groep">${ic("plus")}Nieuwe groep</button></div>
+    <section class="panel"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Groep</th><th>Soort</th><th></th></tr></thead><tbody>${g.map(([n, c]) => `<tr><td><b style="font-weight:500">${n}</b></td><td>${c}</td><td style="text-align:right"><button class="link" type="button" data-action="toast:Opent de groep om te bewerken">Bewerken</button></td></tr>`).join("")}</tbody></table></div></section>`;
+}
+function aEvents() {
+  const e = [["Tech Talk: AI-agents in de praktijk", "16 jun"], ["Lunchwebinar: Cloud security fundamentals", "18 jun"], ["IN-IT zomerborrel & netwerkavond", "25 jun"], ["Workshop: CV & LinkedIn review night", "2 jul"], ["Mentorship-programma: kick-off Q3", "9 jul"], ["Voetbal & BBQ in het Westerpark", "19 jul"]];
+  return `<div class="hello"><div><h1>Activiteiten</h1><p>Alle zes staan in het verleden. De agenda van de community is nu leeg.</p></div><button class="btn primary" type="button" data-action="toast:Opent het formulier voor een nieuwe activiteit">${ic("plus")}Nieuwe activiteit</button></div>
+    <section class="panel"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Activiteit</th><th>Datum</th><th>Status</th></tr></thead><tbody>${e.map(([t, d]) => `<tr><td><b style="font-weight:500">${t}</b></td><td class="num">${d} 2026</td><td><span class="st off">Afgelopen</span></td></tr>`).join("")}</tbody></table></div></section>`;
+}
+
+/* ── render ──────────────────────────────────── */
+function screenHTML(path) {
+  if (S.flow === "admin") return vAdmin();
+  if (S.flow === "login") {
+    const L = S.login;
+    if (L.stage === "result") {
+      if (L.as === "approved") return vHub("Evan Poul", "EP", "#f3dcd4", true);
+      if (L.as === "pending") return S.nu.stage === "approved" || S.nu.stage === "hub" ? vHub(NEWNAME(), newIni(), "#dcebe2", false) : vWait(path);
+      return vUnknown();
+    }
+    return vLogin();
+  }
+  const st = S.nu.stage;
+  if (st === "code" || st === "linkedin") return vCode();
+  if (st === "profile") return vProfile();
+  if (st === "hub") return vHub(NEWNAME(), newIni(), "#dcebe2", false);
+  return vWait(path);
+}
+function render(path, transition = true) {
+  const app = $("#app");
+  const doit = () => { app.innerHTML = screenHTML(path); renderFlowbar(); afterRender(); };
+  if (transition && document.startViewTransition && !reduced()) document.startViewTransition(doit);
+  else doit();
+}
+function afterRender() {
+  const ind = $("#anav .ind");
+  if (ind) {
+    const idx = ADMIN_NAV.findIndex(([k]) => k === S.admin.view);
+    requestAnimationFrame(() => requestAnimationFrame(() => { ind.style.transform = `translateY(${idx * 48}px)`; }));
+    S.admin.prevIdx = idx;
+  }
+  const code = $("#code");
+  if (code) code.addEventListener("keydown", (e) => { if (e.key === "Enter") $('[data-action="check-code"]')?.click(); });
+}
+
+/* overlays */
+let overlay = null;
+function closeOverlay() { if (!overlay) return; const els = overlay; overlay = null; els.forEach((e) => e.classList.remove("show")); setTimeout(() => els.forEach((e) => e.remove()), 220); }
+function openOverlay(html, cls) {
+  closeOverlay();
+  const scrim = document.createElement("div"); scrim.className = "scrim"; scrim.dataset.action = "close";
+  const box = document.createElement("div"); box.className = cls; box.innerHTML = html; box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true");
+  $("#app").append(scrim, box);
+  requestAnimationFrame(() => { scrim.classList.add("show"); box.classList.add("show"); });
+  overlay = [scrim, box];
+  return box;
+}
+function toast(msg) {
+  const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.innerHTML = ic("check") + esc(msg);
+  $("#app").appendChild(t); requestAnimationFrame(() => t.classList.add("show"));
+  setTimeout(() => { t.classList.remove("show"); setTimeout(() => t.remove(), 260); }, 2400);
+}
+function linkedinPopup(mode) {
+  const body = mode === "new"
+    ? `<p class="sub">Voor deze demo: kies met welk LinkedIn-account je doorgaat.</p>
+       <button type="button" class="acct" data-action="li-pick:new"><span class="av slot"></span><span class="t"><b>Jouw LinkedIn-account</b><small>Naam, foto en e-mail gaan naar IN-IT</small></span>${ic("arrow")}</button>`
+    : `<p class="sub">Voor deze demo: kies wie er inlogt.</p>
+       <button type="button" class="acct" data-action="li-pick:approved"><span class="av" style="background:#f3dcd4">EP</span><span class="t"><b>Evan Poul</b><small>Goedgekeurd lid en beheerder</small></span>${ic("arrow")}</button>
+       <button type="button" class="acct" data-action="li-pick:pending"><span class="av ${newIni() ? "" : "slot"}" style="${newIni() ? "background:#dcebe2" : ""}">${newIni()}</span><span class="t"><b>${esc(NEWNAME())}</b><small>${S.nu.stage === "approved" || S.nu.stage === "hub" ? "Goedgekeurd" : "Heeft een account, wacht op goedkeuring"}</small></span>${ic("arrow")}</button>
+       <button type="button" class="acct" data-action="li-pick:unknown"><span class="av slot"></span><span class="t"><b>Een ander LinkedIn-account</b><small>Nooit eerder ingelogd bij IN-IT</small></span>${ic("arrow")}</button>`;
+  openOverlay(`<div class="bar">${ic("lock")}linkedin.com · inloggen voor IN-IT</div><div class="in-body"><h3 style="font-size:18px">Inloggen via LinkedIn</h3>${body}</div>`, "lipop");
+}
+function newInvite() {
+  const code = "INIT-" + Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+  const box = openOverlay(`<h3>Nieuwe uitnodiging</h3><p class="muted">Deel deze code met de persoon die je uitnodigt. Hij werkt één keer en is 24 uur geldig.</p>
+    <div class="bigcode"><span class="code">${code}</span><button class="btn ghost sm" type="button" data-action="copy:${code}">${ic("copy")}Kopieer</button></div>
+    <label>Alleen geldig voor dit e-mailadres (optioneel)<input id="imail" type="email" placeholder="naam@voorbeeld.nl"></label>
+    <label>Notitie voor jezelf<input id="inote" placeholder="Bijvoorbeeld: collega van Ashraf"></label>
+    <div class="row"><button class="btn ghost" type="button" data-action="close">Annuleren</button><button class="btn primary" type="button" data-action="save-invite:${code}">Code opslaan</button></div>`, "modal");
+  setTimeout(() => $("#inote", box)?.focus(), 40);
+}
+
+/* ── events ──────────────────────────────────── */
+document.addEventListener("click", async (ev) => {
+  const s = ev.target.closest("[data-set]");
+  if (s) {
+    const [k, v] = s.dataset.set.split(":");
+    if (k === "device") return setDevice(v);
+    if (k === "flow") return setFlow(v);
+  }
+  const a = ev.target.closest("[data-action]");
+  if (!a) return;
+  ev.preventDefault();
+  const full = a.dataset.action, i = full.indexOf(":");
+  const act = i < 0 ? full : full.slice(0, i), arg = i < 0 ? "" : full.slice(i + 1);
+  const N = S.nu;
+  switch (act) {
+    case "close": closeOverlay(); break;
+    case "toast": closeOverlay(); toast(arg); break;
+    case "reset": S = fresh(); setSeg("flow", "new"); setSeg("device", "desktop"); $("#stage").classList.remove("mobile"); render(); toast("Opnieuw begonnen"); break;
+    case "check-code": {
+      const raw = ($("#code").value || "").trim().toUpperCase().replace(/^INIT-/, "");
+      N.code = raw;
+      const inv = S.invites.find((x) => !x.masked && x.code === "INIT-" + raw);
+      if (!raw) N.codeState = { ok: false, text: "Vul de 8 tekens van je code in." };
+      else if (!inv) N.codeState = { ok: false, text: "Deze code klopt niet of is al gebruikt. Vraag de beheerder om een nieuwe." };
+      else if (inv.status !== "actief") N.codeState = { ok: false, text: "Deze code is al gebruikt. Vraag de beheerder om een nieuwe." };
+      else N.codeState = { ok: true, text: `Code klopt. Geldig tot ${inv.expires}.` };
+      render(null, false);
+      break;
+    }
+    case "li-new": linkedinPopup("new"); break;
+    case "li-login": linkedinPopup("login"); break;
+    case "li-pick": {
+      closeOverlay();
+      if (arg === "new") {
+        const inv = S.invites.find((x) => x.code === "INIT-" + N.code); if (inv) { inv.status = "gebruikt"; }
+        S.admin.log.push(`Code INIT-${N.code} gebruikt`);
+        N.stage = "profile"; render();
+      } else {
+        S.login.stage = "result"; S.login.as = arg;
+        if (arg === "pending" && ["code", "profile"].includes(N.stage)) { N.stage = "waiting"; N.role ||= ""; }
+        render();
+      }
+      break;
+    }
+    case "field": { const f = arg; N.field = N.field.includes(f) ? N.field.filter((x) => x !== f) : [...N.field, f]; a.classList.toggle("on"); a.setAttribute("aria-pressed", String(N.field.includes(f))); break; }
+    case "consent": { N.consent = !N.consent; a.classList.toggle("on", N.consent); a.setAttribute("aria-checked", String(N.consent)); syncSubmit(); break; }
+    case "submit-profile": N.stage = "waiting"; S.admin.log.push(`${NEWNAME()} vroeg goedkeuring aan`); render(); toast("Aanvraag verstuurd"); break;
+    case "edit-profile": N.stage = "profile"; render(); break;
+    case "try": render(arg, false); break;
+    case "enter-hub": N.stage = "hub"; render(); break;
+    case "goto-login": setFlow("login"); break;
+    case "goto-code": setFlow("new"); if (!["code", "linkedin"].includes(N.stage)) { N.stage = "code"; N.codeState = null; } render(); break;
+    case "goto-admin": setFlow("admin"); break;
+    case "goto-hub-admin": S.login = { stage: "result", as: "approved" }; setFlow("login"); break;
+    case "aview": S.admin.view = arg; S.admin.rejectOpen = false; render(null, false); break;
+    case "approve": {
+      const card = $("#req"); if (card && !reduced()) { card.classList.add("leaving"); await new Promise((r) => setTimeout(r, 280)); }
+      N.stage = "approved"; S.admin.log.push(`${NEWNAME()} goedgekeurd`); render(null, false); toast(`${NEWNAME()} is goedgekeurd. Het wachtscherm gaat open`); break;
+    }
+    case "reject-open": S.admin.rejectOpen = true; render(null, false); setTimeout(() => $("#rr")?.focus(), 30); break;
+    case "reject-cancel": S.admin.rejectOpen = false; render(null, false); break;
+    case "reject": N.reason = ($("#rr")?.value || "").trim(); N.stage = "rejected"; S.admin.rejectOpen = false; S.admin.log.push(`${NEWNAME()} afgewezen`); render(null, false); toast("Afgewezen. De aanvrager ziet dit bij de volgende controle"); break;
+    case "new-invite": newInvite(); break;
+    case "copy": { try { await navigator.clipboard.writeText(arg); toast("Code gekopieerd"); } catch { const c = $(".bigcode .code"); const r = document.createRange(); r.selectNodeContents(c); getSelection().removeAllRanges(); getSelection().addRange(r); toast("Code geselecteerd, kopieer met Cmd+C"); } break; }
+    case "save-invite": { S.invites.unshift({ code: arg, status: "actief", expires: "1 okt, " + new Date().toTimeString().slice(0, 5), by: "Evan Poul", note: ($("#inote")?.value || "").trim() || ($("#imail")?.value ? "Voor " + $("#imail").value : "Zonder notitie"), fresh: true }); S.admin.log.push(`Code ${arg} aangemaakt`); closeOverlay(); S.admin.view = "invites"; render(null, false); S.invites[0].fresh = false; toast("Code opgeslagen. Gebruik hem in de flow Nieuw lid"); break; }
+  }
+});
+function syncSubmit() {
+  const b = $('[data-action="submit-profile"]'); if (!b) return;
+  const ok = S.nu.consent && S.nu.role.trim();
+  b.disabled = !ok; b.nextElementSibling.textContent = ok ? "Na het versturen beoordeelt de coördinator je aanvraag." : "Vul je rol in en geef akkoord om te versturen.";
+}
+document.addEventListener("input", (e) => {
+  const map = { pname: "name", prole: "role", pplace: "place" };
+  if (map[e.target.id]) { S.nu[map[e.target.id]] = e.target.value; syncSubmit(); }
+  if (e.target.id === "code") { e.target.value = e.target.value.toUpperCase().replace(/[^0-9A-F]/g, "").slice(0, 8); if (S.nu.codeState) { S.nu.codeState = null; $("#cf").className = "codefield"; $("#cmsg").innerHTML = ""; const b = $('[data-action="li-new"]'); if (b) { b.nextElementSibling?.remove(); b.outerHTML = '<button class="btn dark block" type="button" data-action="check-code">Code controleren</button>'; } } }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeOverlay();
+  if ((e.key === " " || e.key === "Enter") && e.target.matches?.(".consent")) { e.preventDefault(); e.target.click(); }
+});
+
+function placeSeg(seg, instant) {
+  const th = $(".thumb", seg), on = $('[aria-pressed="true"]', seg);
+  if (instant) th.style.transition = "none";
+  th.style.width = on.offsetWidth + "px"; th.style.transform = `translateX(${on.offsetLeft}px)`;
+  if (instant) { th.offsetHeight; th.style.transition = ""; }
+}
+function setSeg(name, v) { const seg = $(`[data-seg="${name}"]`); $$("button", seg).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.set === `${name}:${v}`))); placeSeg(seg); }
+function setFlow(v) {
+  closeOverlay();
+  if (v === "login" && S.flow !== "login" && S.login.as !== "approved") S.login = { stage: "login", as: null };
+  S.flow = v; setSeg("flow", v); render();
+}
+function setDevice(v, force) {
+  if (S.device === v && !force) return;
+  S.device = v; setSeg("device", v); closeOverlay();
+  const app = $("#app");
+  if (reduced()) { $("#stage").classList.toggle("mobile", v === "mobile"); return; }
+  app.classList.add("swap");
+  setTimeout(() => { $("#stage").classList.toggle("mobile", v === "mobile"); app.classList.remove("swap"); }, 180);
+}
+
+render(null, false);
+$$(".seg").forEach((s) => placeSeg(s, true));
+document.fonts?.ready.then(() => $$(".seg").forEach((s) => placeSeg(s, true)));
+})();
+</script>

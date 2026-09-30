@@ -13,7 +13,7 @@ export function LinkedInButton({ label = "Continue with LinkedIn", disabled = fa
     setError(null);
     setLoading(true);
     try {
-      await signIn("linkedin", { callbackUrl: "/onboarding" });
+      await signIn("linkedin", { callbackUrl: "/wachten" });
     } catch {
       setError("LinkedIn login is temporarily unavailable. Please try again later or contact the coordinator.");
       setLoading(false);

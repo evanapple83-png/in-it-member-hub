@@ -12,6 +12,8 @@ export type Community = {
   description: string | null;
   category: string;
   is_private: boolean;
+  /** Uploaded cover image; null means use `cropFor(slug)`. */
+  cover_image_url?: string | null;
 };
 
 const seedCommunities: Community[] = [
@@ -62,6 +64,7 @@ export async function getCommunities(): Promise<Community[]> {
       description: community.description,
       category: community.category,
       is_private: community.isPrivate,
+      cover_image_url: community.coverImageUrl ?? null,
     }));
   } catch {
     return seedCommunities;
@@ -197,6 +200,7 @@ export async function listCommunitiesForAdmin(): Promise<CommunityAdminView[]> {
       description: communities.description,
       category: communities.category,
       is_private: communities.isPrivate,
+      cover_image_url: communities.coverImageUrl,
       member_count: count(communityMemberships.id),
     })
     .from(communities)
@@ -206,7 +210,12 @@ export async function listCommunitiesForAdmin(): Promise<CommunityAdminView[]> {
   return rows;
 }
 
-export async function createCommunity(input: { name: string; description?: string | null; category?: string }) {
+export async function createCommunity(input: {
+  name: string;
+  description?: string | null;
+  category?: string;
+  coverImageUrl?: string | null;
+}) {
   const db = getDb();
   // Prefer a clean, readable slug (the slug is the community URL); fall back to a
   // random-suffixed one only when the name is already taken.
@@ -217,14 +226,20 @@ export async function createCommunity(input: { name: string; description?: strin
   const slug = base && !taken ? base : uniqueSlug(input.name, "community");
   const [row] = await db
     .insert(communities)
-    .values({ slug, name: input.name, description: input.description ?? null, category: input.category ?? "professional" })
+    .values({
+      slug,
+      name: input.name,
+      description: input.description ?? null,
+      category: input.category ?? "professional",
+      coverImageUrl: input.coverImageUrl ?? null,
+    })
     .returning();
   return row;
 }
 
 export async function updateCommunity(
   id: string,
-  patch: { name?: string; description?: string | null; category?: string },
+  patch: { name?: string; description?: string | null; category?: string; coverImageUrl?: string | null },
 ) {
   const db = getDb();
   const [row] = await db

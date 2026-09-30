@@ -44,6 +44,7 @@ export async function POST(request: Request) {
       email: payload.data.email || null,
       note: payload.data.note || null,
       expiresAt,
+      createdByAdminId: admin.adminId,
     })
     .returning();
 

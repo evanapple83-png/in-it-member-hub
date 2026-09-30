@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Footer } from "@/components/layout/Footer";
-import { Navbar } from "@/components/layout/Navbar";
+import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import { Providers } from "@/components/layout/Providers";
 import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+});
+
+// App font for the redesigned member hub, auth screens and beheer (see app.css `.ui`).
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 const geistMono = Geist_Mono({
@@ -36,13 +41,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-off-white text-charcoal">
-        <Providers>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

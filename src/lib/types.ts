@@ -40,6 +40,7 @@ export type Member = {
   email_opt_out: boolean;
   visibility_status: VisibilityStatus;
   consent_given: boolean;
+  rejection_reason?: string | null;
   onboarding_completed?: boolean;
   auth_provider?: string;
   created_at: string;

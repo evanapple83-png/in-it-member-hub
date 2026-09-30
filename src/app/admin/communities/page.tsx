@@ -1,14 +1,7 @@
 import { CommunitiesManagement } from "@/components/admin/CommunitiesManagement";
-import { PageShell } from "@/components/layout/PageShell";
+import { listCommunitiesForAdmin } from "@/lib/communities";
 
-export default function AdminCommunitiesPage() {
-  return (
-    <PageShell
-      eyebrow="Admin · Beheerder"
-      title="Communities beheren"
-      description="Maak professionele en sociale communities aan, pas ze aan of verwijder ze. Nieuwe communities zijn direct zichtbaar voor geautoriseerde leden."
-    >
-      <CommunitiesManagement />
-    </PageShell>
-  );
+export default async function AdminCommunitiesPage() {
+  const communities = await listCommunitiesForAdmin();
+  return <CommunitiesManagement communities={communities} />;
 }

@@ -8,6 +8,7 @@ const patchSchema = z.object({
   name: z.string().min(2).max(80).optional(),
   description: z.string().max(500).nullable().optional().or(z.literal("")),
   category: z.enum(["professional", "social"]).optional(),
+  cover_image_url: z.string().url().max(500).nullable().optional().or(z.literal("")),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -26,6 +27,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     ...(data.name !== undefined ? { name: data.name } : {}),
     ...(data.description !== undefined ? { description: data.description || null } : {}),
     ...(data.category !== undefined ? { category: data.category } : {}),
+    ...(data.cover_image_url !== undefined ? { coverImageUrl: data.cover_image_url || null } : {}),
   });
   if (!community) return NextResponse.json({ error: "Community niet gevonden." }, { status: 404 });
   return NextResponse.json({ community });

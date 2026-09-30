@@ -1,0 +1,1251 @@
+<title>IN-IT prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap">
+<style>
+/* Layout: presentatievlak met een witte app-kaart (linkerbalk, topbalk, canvas + widgetkolom), zoals de referentie. Eén licht thema, bewust. */
+:root {
+  --backdrop: #b9bed0;
+  --card: #ffffff;
+  --canvas: #f5f5f7;
+  --line: #ebebef;
+  --line-strong: #dcdce3;
+  --ink: #1d2130;
+  --muted: #5f6474;
+  --accent: #c2412a;
+  --accent-soft: #fbece8;
+  --navy: #1f2638;
+  --gold: #b58a3a;
+  --ok: #2f7a4f;
+  --ok-soft: #e6f2ea;
+  --font: "Outfit", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --hero: url("__HERO__");
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--backdrop); color: var(--ink);
+  font-family: var(--font); font-size: 15px; line-height: 1.5;
+  padding-inline: 16px; padding-block: 14px 24px;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.015em; text-wrap: balance; }
+p { margin: 0; }
+svg.i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ── presentatiebalk ─────────────────────────── */
+.stagebar { max-width: 1280px; margin: 0 auto 12px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.stagebar .title { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--navy); }
+.stagebar .title small { font-weight: 400; color: #2c3346; }
+.seg { display: inline-flex; background: rgba(255,255,255,.55); border-radius: 999px; padding: 3px; position: relative; }
+.seg button { position: relative; z-index: 1; padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; color: #2c3346; transition: color .2s var(--ease); }
+.seg button[aria-pressed="true"] { color: var(--ink); }
+.seg .thumb { position: absolute; z-index: 0; top: 3px; bottom: 3px; left: 0; border-radius: 999px; background: #fff; box-shadow: 0 1px 3px rgba(29,33,48,.12); transition: transform .28s var(--ease), width .28s var(--ease); }
+.stagebar .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.hint { font-size: 12.5px; color: #2c3346; }
+
+/* ── app-kaart ───────────────────────────────── */
+.stage { display: flex; justify-content: center; }
+.app {
+  container: app / inline-size;
+  width: 100%; max-width: 1280px; height: min(860px, calc(100dvh - 90px)); min-height: 620px;
+  background: var(--card); border-radius: 22px; overflow: hidden; position: relative;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 72px minmax(0, 1fr);
+  box-shadow: 0 30px 80px rgba(31,38,56,.18);
+  transition: opacity .18s var(--ease);
+}
+.stage.mobile .app { max-width: 390px; height: min(820px, calc(100dvh - 90px)); border-radius: 40px; border: 8px solid var(--navy); }
+.app.swap { opacity: 0; }
+
+/* sidebar */
+.side { grid-column: 1; grid-row: 1 / span 2; width: 220px; border-right: 1px solid var(--line); padding: 20px 14px 16px; display: flex; flex-direction: column; min-height: 0; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 22px; font-weight: 600; font-size: 17px; }
+.brand img { width: 34px; height: 34px; border-radius: 10px; }
+.nav { position: relative; display: grid; gap: 4px; }
+.nav .ind { position: absolute; left: 0; right: 0; top: 0; height: 44px; border-radius: 999px; background: var(--canvas); border: 1px solid var(--line-strong); transition: transform .3s var(--ease); pointer-events: none; }
+.nav button { position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px 0 14px; border-radius: 999px; color: var(--muted); font-weight: 500; text-align: left; transition: color .2s var(--ease); }
+.nav button:hover { color: var(--ink); }
+.nav button.on { color: var(--ink); }
+.nav button.on svg { color: var(--accent); }
+.nav .count { margin-left: auto; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+.side h5 { margin: 26px 12px 8px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.mine { display: grid; gap: 2px; }
+.mine button { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 12px; font-size: 14px; color: var(--ink); text-align: left; transition: background .15s; }
+.mine button:hover { background: var(--canvas); }
+.mine .cv { width: 28px; height: 28px; border-radius: 9px; flex: none; }
+.mine-empty { margin: 0 12px; font-size: 13px; color: var(--muted); }
+.side .grow { flex: 1; }
+.side .out { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: var(--muted); font-size: 14px; border-radius: 12px; }
+.side .out:hover { color: var(--ink); }
+
+/* topbar */
+.top { grid-column: 2; grid-row: 1; display: flex; align-items: center; gap: 12px; padding: 0 22px; border-bottom: 1px solid var(--line); min-width: 0; }
+.search { flex: 0 1 340px; display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 5px 0 16px; border-radius: 999px; background: var(--canvas); color: var(--muted); font-size: 14px; text-align: left; }
+.search span { flex: 1; }
+.search kbd { font-family: var(--font); font-size: 12px; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 6px; padding: 0 5px; }
+.search .go { width: 32px; height: 32px; border-radius: 50%; background: var(--navy); color: #fff; display: grid; place-items: center; }
+.search .go svg { width: 15px; height: 15px; }
+.top .sp { flex: 1; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 18px; border-radius: 999px; font-weight: 500; font-size: 14px; white-space: nowrap; transition: transform .14s var(--ease), background .2s, color .2s, box-shadow .2s; }
+.btn:active { transform: scale(.97); }
+.btn.primary { background: var(--accent); color: #fff; }
+.btn.primary:hover { background: #ad3823; }
+.btn.dark { background: var(--navy); color: #fff; }
+.btn.dark:hover { background: #2c3550; }
+.btn.ghost { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
+.btn.ghost:hover { background: var(--canvas); }
+.btn.sm { height: 34px; padding: 0 14px; font-size: 13px; }
+.btn.joined { background: var(--ok-soft); color: var(--ok); }
+.icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line-strong); display: grid; place-items: center; position: relative; background: #fff; transition: transform .14s var(--ease), background .2s; }
+.icon-btn:hover { background: var(--canvas); }
+.icon-btn:active { transform: scale(.95); }
+.icon-btn .dot { position: absolute; top: 9px; right: 10px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px #fff; }
+.me { display: flex; align-items: center; gap: 10px; text-align: left; padding: 4px 6px 4px 4px; border-radius: 999px; }
+.me:hover { background: var(--canvas); }
+.me b { display: block; font-weight: 500; font-size: 14px; line-height: 1.2; }
+.me small { display: block; color: var(--muted); font-size: 12px; }
+.av { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; font-size: 14px; flex: none; color: var(--ink); background: #e8e3f0; }
+.av.sm { width: 30px; height: 30px; font-size: 11.5px; }
+.av.xs { width: 26px; height: 26px; font-size: 10.5px; border: 2px solid #fff; }
+.av.slot { background: repeating-linear-gradient(135deg, #eeeef2 0 6px, #f6f6f9 6px 12px); color: var(--muted); }
+.mob-only { display: none !important; }
+
+/* canvas */
+.main { grid-column: 2; grid-row: 2; overflow-y: auto; background: var(--canvas); min-height: 0; view-transition-name: main; scroll-behavior: smooth; }
+.page { padding: 22px; display: grid; gap: 18px; }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 18px; align-items: start; }
+.stack { display: grid; gap: 18px; min-width: 0; }
+.panel { background: var(--card); border-radius: 18px; padding: 18px; min-width: 0; }
+.panel.flush { padding: 0; overflow: hidden; }
+.ph { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.ph h3 { font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.badge { min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; background: var(--canvas); color: var(--ink); font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+.badge.accent { background: var(--accent); color: #fff; }
+.link { font-size: 13px; font-weight: 500; color: var(--ink); border: 1px solid var(--line-strong); border-radius: 999px; padding: 4px 12px; background: #fff; transition: background .15s; }
+.link:hover { background: var(--canvas); }
+.muted { color: var(--muted); }
+.slot { color: var(--muted); border-bottom: 1px dashed var(--line-strong); }
+.hello { display: flex; align-items: end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.hello h1 { font-size: 28px; }
+.hello p { color: var(--muted); }
+.later { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 500; color: var(--gold); border: 1px dashed var(--gold); white-space: nowrap; }
+
+/* covers: uitsneden van het IN-IT heldenbeeld */
+.cover { background-image: var(--hero); background-repeat: no-repeat; background-color: #f4efe9; overflow: hidden; }
+.cover-in { width: 100%; height: 100%; background: inherit; transition: transform .5s var(--ease); }
+.c-arch   { background-size: 230%; background-position: 96% 38%; }
+.c-canal  { background-size: 240%; background-position: 2% 42%; }
+.c-wave   { background-size: 190%; background-position: 58% 78%; }
+.c-circuit{ background-size: 260%; background-position: 70% 96%; }
+.c-lion   { background-size: 300%; background-position: 82% 60%; }
+.c-bridge { background-size: 330%; background-position: 16% 58%; }
+.c-wide   { background-size: 118%; background-position: 50% 62%; }
+
+/* kaarten */
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 10px; display: flex; flex-direction: column; gap: 10px; text-align: left; transition: transform .22s var(--ease), box-shadow .22s var(--ease), border-color .22s; min-width: 0; }
+.tile:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(29,33,48,.09); border-color: var(--line-strong); }
+.tile:hover .cover-in { transform: scale(1.035); }
+.tile .cover { border-radius: 13px; aspect-ratio: 16 / 9; max-width: 100%; }
+.tile .body { padding: 2px 6px 4px; display: grid; gap: 4px; }
+.tile h4 { font-size: 16px; }
+.tile .desc { color: var(--muted); font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tile .foot { display: flex; align-items: center; gap: 8px; padding: 0 6px 4px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 999px; border: 1px solid var(--line-strong); font-size: 12.5px; color: var(--ink); background: #fff; white-space: nowrap; }
+.chip svg { width: 14px; height: 14px; }
+.chip.soft { border-color: transparent; background: var(--canvas); }
+.chip.tag { height: 22px; font-size: 11.5px; padding: 0 9px; border: 0; background: var(--canvas); color: var(--muted); }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.tiles.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tiles .wide { grid-column: span 2; }
+.tiles .wide .cover { aspect-ratio: 21 / 8; }
+
+/* uitgelicht */
+.feature { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0; text-align: left; width: 100%; }
+.feature .cover { min-height: 250px; }
+.feature .fb { padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; }
+.feature .fb h2 { font-size: 24px; line-height: 1.2; }
+.feature .fb .desc { color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.feature .fb .row { margin-top: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.feature:hover .cover-in { transform: scale(1.03); }
+.kick { font-size: 12.5px; font-weight: 500; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+
+/* datumtegel + rijen */
+.date { width: 54px; height: 58px; border-radius: 14px; background: var(--canvas); display: grid; place-content: center; text-align: center; flex: none; line-height: 1.05; }
+.date b { font-size: 20px; font-weight: 600; }
+.date small { font-size: 11.5px; color: var(--muted); text-transform: lowercase; }
+.date.accent { background: var(--accent-soft); }
+.date.accent small { color: var(--accent); }
+.rows { display: grid; }
+.erow { display: flex; align-items: center; gap: 14px; padding: 12px 8px; border-radius: 14px; text-align: left; width: 100%; transition: background .15s; min-width: 0; }
+.erow:hover { background: var(--canvas); }
+.erow .t { min-width: 0; flex: 1; display: grid; gap: 2px; }
+.erow .t b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.erow .t small { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.erow .t small svg { width: 14px; height: 14px; }
+.erow + .erow { border-top: 1px solid var(--line); border-radius: 0; }
+.erow + .erow:hover { border-radius: 14px; border-top-color: transparent; }
+
+/* aanbevolen */
+.person { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 16px; background: var(--canvas); text-align: left; width: 100%; }
+.person + .person { margin-top: 8px; }
+.person .t { flex: 1; min-width: 0; }
+.person .t b { display: block; font-weight: 500; font-size: 14px; }
+.person .t small { display: block; color: var(--muted); font-size: 12.5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.round { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; flex: none; transition: transform .14s var(--ease), background .2s; }
+.round:hover { background: #ad3823; }
+.round:active { transform: scale(.94); }
+.round svg { width: 16px; height: 16px; }
+
+/* navy kaart */
+.navycard { background: var(--navy); color: #fff; border-radius: 18px; padding: 20px; display: grid; gap: 10px; }
+.navycard h3 { font-size: 18px; }
+.navycard p { color: #c9cfdd; font-size: 14px; }
+.navycard .btn { background: #fff; color: var(--ink); justify-self: start; }
+.navycard .btn:hover { background: #eef0f5; }
+
+/* onboarding */
+.steps { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.step { display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 16px 0 8px; border-radius: 999px; border: 1px solid var(--line-strong); background: #fff; font-size: 14px; transition: background .2s, border-color .2s, color .2s; }
+.step .ck { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--line-strong); display: grid; place-items: center; transition: background .2s, border-color .2s; }
+.step .ck svg { width: 14px; height: 14px; stroke-width: 2.4; transform: scale(.5); opacity: 0; transition: transform .25s var(--ease), opacity .2s; }
+.step.done { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+.step.done .ck { background: var(--ok); border-color: var(--ok); color: #fff; }
+.step.done .ck svg { transform: scale(1); opacity: 1; }
+.progress { height: 6px; border-radius: 999px; background: var(--canvas); overflow: hidden; width: 140px; }
+.progress i { display: block; height: 100%; width: 100%; background: var(--ok); border-radius: inherit; transform-origin: left; transition: transform .5s var(--ease); }
+.welcome { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.welcome .l { display: grid; gap: 4px; }
+.welcome.leaving { opacity: 0; transform: translateY(-6px); transition: opacity .3s var(--ease), transform .3s var(--ease); }
+
+/* pillen (tabs/filters) met glijdende indicator */
+.pills { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; position: relative; }
+.pill { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 8px 0 16px; border-radius: 999px; border: 1px solid var(--line-strong); background: #fff; font-size: 14px; font-weight: 500; transition: background .22s var(--ease), color .22s var(--ease), border-color .22s, transform .14s var(--ease); }
+.pill:active { transform: scale(.97); }
+.pill .badge { transition: background .22s, color .22s; }
+.pill.no-count { padding-right: 16px; }
+.pill.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+.pill.on .badge { background: var(--accent); color: #fff; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.viewtog { display: inline-flex; gap: 4px; }
+.viewtog button { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); transition: background .2s, color .2s; }
+.viewtog button.on { background: var(--navy); color: #fff; }
+
+/* leden */
+.mcard { align-items: center; text-align: center; padding: 10px 10px 16px; }
+.mcard .cover { aspect-ratio: 16 / 6; width: 100%; }
+.mcard .av { width: 64px; height: 64px; font-size: 20px; margin-top: -40px; border: 4px solid #fff; position: relative; }
+.mcard h4 { font-size: 16px; }
+.mcard .tags { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.mlist { display: grid; gap: 8px; }
+.mrow { display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 16px; padding: 10px 14px 10px 10px; text-align: left; width: 100%; border: 1px solid var(--line); transition: border-color .2s, transform .2s var(--ease); }
+.mrow:hover { border-color: var(--line-strong); transform: translateX(2px); }
+.mrow .t { flex: 1; min-width: 0; }
+.mrow .t b { font-weight: 500; display: block; }
+.mrow .t small { color: var(--muted); font-size: 13px; }
+.field { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 999px; background: #fff; border: 1px solid var(--line-strong); min-width: 0; flex: 0 1 260px; }
+.field input { border: 0; outline: 0; background: transparent; min-width: 0; flex: 1; font-size: 14px; }
+.field:focus-within { border-color: var(--navy); }
+
+/* profiel (referentie) */
+.prof { padding: 12px; }
+.prof .cover { height: 190px; border-radius: 14px; position: relative; }
+.stats { position: absolute; right: 14px; bottom: 14px; display: flex; gap: 18px; padding: 10px 16px; border-radius: 12px; background: rgba(255,255,255,.82); color: var(--ink); }
+.stats div { display: grid; text-align: center; line-height: 1.15; }
+.stats b { font-weight: 600; }
+.stats small { font-size: 11.5px; color: var(--muted); }
+.prof .row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 10px; padding: 0 8px; }
+.prof .center { display: grid; justify-items: center; text-align: center; margin-top: -58px; position: relative; }
+.prof .center .av { width: 108px; height: 108px; font-size: 32px; border: 5px solid #fff; box-shadow: 0 8px 22px rgba(29,33,48,.12); }
+.prof .center h2 { font-size: 22px; margin-top: 10px; }
+.prof .center p { color: var(--muted); font-size: 14px; }
+.prof .left, .prof .right { display: flex; gap: 8px; padding-top: 14px; flex-wrap: wrap; }
+.prof .right { justify-content: flex-end; }
+.in { font-weight: 700; font-size: 14px; letter-spacing: -.02em; }
+.about { display: grid; gap: 14px; }
+.kv { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 8px 14px; font-size: 14px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+
+/* groep */
+.ghead { position: relative; }
+.ghead .cover { height: 220px; }
+.ghead .back { position: absolute; top: 14px; left: 14px; background: #fff; }
+.ghead .gb { padding: 18px 22px 20px; display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap; }
+.ghead h1 { font-size: 28px; }
+.ghead .gb p { color: var(--muted); max-width: 60ch; margin-top: 4px; }
+.ghead .meta { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+.avstack { display: inline-flex; }
+.avstack .av + .av { margin-left: -8px; }
+.avstack .av.pop { animation: pop .32s var(--ease); }
+@keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.composer { display: flex; gap: 12px; align-items: flex-start; }
+.composer textarea { display: block; width: 100%; min-height: 46px; max-height: 180px; resize: none; border: 1px solid var(--line-strong); border-radius: 16px; padding: 11px 14px; outline: 0; font-size: 14.5px; background: #fff; transition: border-color .2s, min-height .2s; }
+.composer textarea:focus { border-color: var(--navy); min-height: 90px; }
+.composer .actions { display: flex; justify-content: flex-end; margin-top: 8px; gap: 8px; }
+.post { display: grid; gap: 10px; padding: 16px 18px; background: #fff; border-radius: 18px; }
+.post.enter { animation: rise .38s var(--ease); }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.post .who { display: flex; align-items: center; gap: 10px; }
+.post .who b { font-weight: 500; display: block; font-size: 14px; }
+.post .who small { color: var(--muted); font-size: 12.5px; }
+.post .txt { font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.post .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.react { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line-strong); font-size: 13px; background: #fff; transition: background .2s, color .2s, border-color .2s, transform .14s var(--ease); }
+.react:active { transform: scale(.95); }
+.react svg { width: 15px; height: 15px; transition: transform .25s var(--ease); }
+.react.on { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.react.on svg { fill: currentColor; transform: scale(1.12); }
+.replies { display: grid; gap: 10px; padding-left: 14px; border-left: 2px solid var(--line); margin-left: 16px; }
+.reply { display: flex; gap: 10px; align-items: flex-start; }
+.reply .bub { background: var(--canvas); border-radius: 14px; padding: 8px 12px; font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
+.reply .bub b { font-weight: 500; font-size: 13px; display: block; }
+.replybox { display: flex; gap: 8px; align-items: center; }
+.replybox input { flex: 1; min-width: 0; height: 36px; border-radius: 999px; border: 1px solid var(--line-strong); padding: 0 14px; outline: 0; font-size: 14px; }
+.replybox input:focus { border-color: var(--navy); }
+.empty { display: grid; justify-items: center; text-align: center; gap: 8px; padding: 34px 20px; }
+.empty .ring { width: 56px; height: 56px; border-radius: 50%; background: var(--canvas); display: grid; place-items: center; color: var(--accent); }
+.empty p { color: var(--muted); max-width: 40ch; }
+
+/* activiteit */
+.rsvp { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); background: var(--canvas); border-radius: 999px; padding: 4px; }
+.rsvp button { position: relative; z-index: 1; height: 40px; border-radius: 999px; font-weight: 500; font-size: 14px; color: var(--muted); transition: color .22s var(--ease); }
+.rsvp button.on { color: #fff; }
+.rsvp .thumb { position: absolute; z-index: 0; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / 3); border-radius: 999px; background: var(--navy); transition: transform .3s var(--ease), opacity .2s; }
+.rsvp .thumb.going { background: var(--accent); }
+.roll { display: inline-block; overflow: hidden; height: 1.2em; vertical-align: bottom; }
+.roll span { display: block; animation: roll .32s var(--ease); }
+@keyframes roll { from { transform: translateY(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+.metalist { display: grid; gap: 12px; }
+.metalist div { display: flex; gap: 12px; align-items: center; font-size: 14.5px; }
+.metalist .ic { width: 38px; height: 38px; border-radius: 12px; background: var(--canvas); display: grid; place-items: center; color: var(--ink); flex: none; }
+.metalist small { display: block; color: var(--muted); font-size: 12.5px; }
+.prose { font-size: 15.5px; line-height: 1.65; max-width: 62ch; }
+
+/* overlays */
+.scrim { position: absolute; inset: 0; background: rgba(29,33,48,.28); z-index: 40; opacity: 0; transition: opacity .18s var(--ease); }
+.scrim.show { opacity: 1; }
+.cmdk { position: absolute; z-index: 41; left: 50%; top: 84px; width: min(620px, calc(100% - 28px)); background: #fff; border-radius: 20px; box-shadow: 0 30px 80px rgba(29,33,48,.25); overflow: hidden; transform: translateX(-50%) scale(.97); opacity: 0; transition: transform .18s var(--ease), opacity .16s var(--ease); }
+.cmdk.show { transform: translateX(-50%) scale(1); opacity: 1; }
+.cmdk .q { display: flex; align-items: center; gap: 10px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.cmdk .q input { flex: 1; border: 0; outline: 0; font-size: 16px; min-width: 0; }
+.cmdk .res { max-height: 380px; overflow-y: auto; padding: 8px; position: relative; }
+.cmdk h6 { margin: 10px 10px 4px; font-size: 11.5px; font-weight: 500; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.cmdk .it { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 9px 10px; border-radius: 12px; position: relative; z-index: 1; }
+.cmdk .it .t { flex: 1; min-width: 0; }
+.cmdk .it .t b { font-weight: 500; display: block; font-size: 14.5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cmdk .it .t small { color: var(--muted); font-size: 12.5px; }
+.cmdk .it .cv { width: 34px; height: 34px; border-radius: 10px; flex: none; }
+.cmdk .it .go { opacity: 0; transition: opacity .15s; color: var(--muted); }
+.cmdk .it.act .go { opacity: 1; }
+.cmdk .hl { position: absolute; left: 8px; right: 8px; top: 0; height: 0; background: var(--canvas); border-radius: 12px; transition: transform .16s var(--ease), height .16s var(--ease); z-index: 0; }
+.cmdk .foot { display: flex; gap: 14px; padding: 10px 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.cmdk kbd { font-family: var(--font); border: 1px solid var(--line-strong); border-radius: 5px; padding: 0 5px; margin-right: 4px; }
+.pop { position: absolute; z-index: 41; background: #fff; border-radius: 18px; box-shadow: 0 20px 60px rgba(29,33,48,.2); padding: 8px; opacity: 0; transform: scale(.96); transition: transform .16s var(--ease), opacity .14s var(--ease); }
+.pop.show { opacity: 1; transform: scale(1); }
+.pop .mi { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; width: 100%; text-align: left; }
+.pop .mi:hover { background: var(--canvas); }
+.pop .mi .ic { width: 36px; height: 36px; border-radius: 11px; background: var(--canvas); display: grid; place-items: center; flex: none; }
+.pop .mi b { display: block; font-weight: 500; font-size: 14px; }
+.pop .mi small { color: var(--muted); font-size: 12.5px; }
+.pop h6 { margin: 6px 12px 6px; font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+.modal { position: absolute; z-index: 41; left: 50%; top: 50%; width: min(540px, calc(100% - 28px)); background: #fff; border-radius: 22px; padding: 22px; box-shadow: 0 30px 80px rgba(29,33,48,.25); transform: translate(-50%, -48%) scale(.97); opacity: 0; transition: transform .2s var(--ease), opacity .18s var(--ease); display: grid; gap: 14px; }
+.modal.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+.modal h3 { font-size: 20px; }
+.modal label { display: grid; gap: 6px; font-size: 13px; font-weight: 500; }
+.modal input, .modal textarea, .modal select { border: 1px solid var(--line-strong); border-radius: 14px; padding: 10px 14px; outline: 0; font-size: 14.5px; background: #fff; }
+.modal input:focus, .modal textarea:focus, .modal select:focus { border-color: var(--navy); }
+.modal textarea { min-height: 120px; resize: vertical; }
+.modal .row { display: flex; justify-content: flex-end; gap: 8px; }
+.toast { position: absolute; z-index: 60; left: 50%; bottom: 22px; transform: translate(-50%, 10px); opacity: 0; background: var(--navy); color: #fff; border-radius: 999px; padding: 10px 18px; font-size: 14px; display: flex; gap: 10px; align-items: center; transition: transform .22s var(--ease), opacity .2s var(--ease); white-space: nowrap; max-width: calc(100% - 24px); }
+.toast.show { transform: translate(-50%, 0); opacity: 1; }
+.toast svg { color: #9fe0b7; }
+
+/* mobiel: onderbalk */
+.tabs { display: none; }
+.sheet { position: absolute; z-index: 41; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 24px 24px 0 0; padding: 10px 12px calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateY(100%); transition: transform .28s var(--ease); }
+.sheet.show { transform: none; }
+.sheet .grab { width: 40px; height: 5px; border-radius: 999px; background: var(--line-strong); margin: 0 auto 10px; }
+
+/* ── responsive via container queries ───────── */
+@container app (max-width: 1100px) {
+  .cols { grid-template-columns: minmax(0, 1fr); }
+  .aside { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+  .tiles.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container app (max-width: 820px) {
+  .feature { grid-template-columns: minmax(0, 1fr); }
+  .feature .cover { min-height: 170px; }
+}
+@container app (max-width: 700px) {
+  .side { display: none; }
+  .desk-only { display: none !important; }
+  .mob-only { display: revert !important; }
+  .btn.mob-only { display: inline-flex !important; }
+  .mi.mob-only { display: flex !important; }
+  .top { padding: 0 14px; gap: 8px; }
+  .search { flex: 0 0 auto; width: 40px; height: 40px; padding: 0; justify-content: center; border: 1px solid var(--line-strong); background: #fff; }
+  .search span, .search kbd, .search .go { display: none; }
+  .brand-m { display: flex !important; align-items: center; gap: 8px; font-weight: 600; font-size: 16px; }
+  .brand-m img { width: 30px; height: 30px; border-radius: 9px; }
+  .page { padding: 14px 14px 96px; gap: 14px; }
+  .tiles, .tiles.three { grid-template-columns: minmax(0, 1fr); }
+  .tiles .wide { grid-column: auto; }
+  .tiles .wide .cover { aspect-ratio: 16 / 9; }
+  .hello h1 { font-size: 23px; }
+  .prof .row { grid-template-columns: 1fr; }
+  .prof .left, .prof .right { justify-content: center; }
+  .prof .left { order: 2; } .prof .right { order: 3; padding-top: 4px; }
+  .stats { left: 10px; right: 10px; justify-content: space-around; bottom: 10px; }
+  .prof .center { margin-top: -50px; }
+  .ghead .cover { height: 170px; }
+  .ghead h1 { font-size: 23px; }
+  .kv { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .kv dd { margin-bottom: 8px; }
+  .tabs { display: grid; position: absolute; left: 0; right: 0; bottom: 0; grid-template-columns: repeat(4, 1fr); background: #fff; border-top: 1px solid var(--line); padding: 6px 8px calc(8px + env(safe-area-inset-bottom, 0px)); z-index: 30; }
+  .tabs button { display: grid; justify-items: center; gap: 3px; padding: 6px 0; font-size: 11.5px; color: var(--muted); position: relative; z-index: 1; transition: color .2s; }
+  .tabs button.on { color: var(--accent); font-weight: 500; }
+  .tabs .ind { position: absolute; top: 6px; left: 8px; height: 52px; width: calc((100% - 16px) / 4); border-radius: 16px; background: var(--accent-soft); transition: transform .3s var(--ease); z-index: 0; }
+  .cmdk { top: 14px; }
+  .modal { top: auto; bottom: 0; left: 0; width: 100%; border-radius: 24px 24px 0 0; transform: translateY(24px); }
+  .modal.show { transform: none; }
+  .toast { bottom: 90px; }
+}
+.brand-m { display: none; }
+
+/* paginaovergangen */
+::view-transition-old(main) { animation: vt-out .16s var(--ease) both; }
+::view-transition-new(main) { animation: vt-in .26s var(--ease) both; }
+::view-transition-group(hero-cover) { animation-duration: .38s; animation-timing-function: var(--ease); }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(6px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
+  .tile:hover, .mrow:hover { transform: none; }
+  .tile:hover .cover-in, .feature:hover .cover-in { transform: none; }
+}
+@media (max-width: 480px) {
+  body { padding-inline: 8px; padding-block: 8px 12px; }
+  .stagebar .hint { display: none; }
+  .app { height: calc(100dvh - 76px); border-radius: 18px; }
+  .stage.mobile .app { border-width: 0; border-radius: 18px; }
+}
+</style>
+
+<div class="stagebar">
+  <div class="title"><img src="__LOGO__" alt="" width="26" height="26" style="border-radius:8px"> IN-IT ledenomgeving <small>klikbaar prototype</small></div>
+  <div class="controls">
+    <span class="hint">Probeer ⌘K, lid worden, aanmelden, iets plaatsen</span>
+    <div class="seg" data-seg="device"><span class="thumb"></span><button type="button" data-set="device:desktop" aria-pressed="true">Desktop</button><button type="button" data-set="device:mobile" aria-pressed="false">Mobiel</button></div>
+    <div class="seg" data-seg="mode"><span class="thumb"></span><button type="button" data-set="mode:nu" aria-pressed="true">Nu</button><button type="button" data-set="mode:straks" aria-pressed="false">Straks</button></div>
+  </div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="app" id="app">
+    <aside class="side">
+      <div class="brand"><img src="__LOGO__" alt="IN-IT">IN-IT</div>
+      <nav class="nav" id="nav" aria-label="Hoofdmenu">
+        <span class="ind" id="navInd"></span>
+      </nav>
+      <h5>Mijn groepen</h5>
+      <div class="mine" id="mine"></div>
+      <div class="grow"></div>
+      <button class="out" type="button" data-action="toast:Uitloggen werkt in de echte app"><svg class="i" viewBox="0 0 24 24"><path d="M10 5H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4M14 8l4 4-4 4M18 12H9"/></svg>Uitloggen</button>
+    </aside>
+    <header class="top">
+      <div class="brand-m"><img src="__LOGO__" alt="IN-IT">IN-IT</div>
+      <button class="search" type="button" data-action="cmdk" aria-label="Zoeken">
+        <svg class="i mob-only" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg>
+        <span>Zoek leden, groepen, activiteiten</span><kbd>⌘K</kbd>
+        <i class="go"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg></i>
+      </button>
+      <div class="sp"></div>
+      <button class="btn primary desk-only" type="button" data-action="create"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Deel iets</button>
+      <button class="icon-btn" type="button" data-action="notif" aria-label="Meldingen" id="bell"><svg class="i" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg><span class="dot" id="belldot" hidden></span></button>
+      <button class="me" type="button" data-action="menu" aria-label="Mijn account">
+        <span class="av" style="background:#f3dcd4">EP</span>
+        <span class="desk-only"><b>Evan Poul</b><small>Beheerder</small></span>
+      </button>
+    </header>
+    <main class="main" id="main"></main>
+    <nav class="tabs" id="tabs" aria-label="Hoofdmenu mobiel"><span class="ind" id="tabInd"></span></nav>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const I = {
+  home: '<path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/>',
+  users: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.9-4.8 5.5-4.8s4.9 1.8 5.5 4.8M16 5.2a3 3 0 0 1 0 5.6M17.5 14.6c1.6.6 2.7 2.1 3 4.4"/>',
+  groups: '<circle cx="12" cy="7.5" r="3"/><circle cx="5.8" cy="16" r="2.6"/><circle cx="18.2" cy="16" r="2.6"/><path d="M9.6 10.8 7.6 13.6M14.4 10.8l2 2.8"/>',
+  cal: '<path d="M5 7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2zM5 10h14M9 3v4M15 3v4"/>',
+  book: '<path d="M5 5.5A1.5 1.5 0 0 1 6.5 4H18v14H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H18M9 8h5"/>',
+  search: '<circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  up: '<path d="M7 17 17 7M9 7h8v8"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  chat: '<path d="M4.5 6.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H11l-4.5 3.5v-3.5a2 2 0 0 1-2-2z"/>',
+  pin: '<path d="M12 21s-6-5.3-6-10.5a6 6 0 1 1 12 0C18 15.7 12 21 12 21z"/><circle cx="12" cy="10.5" r="2"/>',
+  video: '<path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h8A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 4 16.5zM15 10.5l5-3v9l-5-3"/>',
+  clock: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/>',
+  grid: '<rect x="4.5" y="4.5" width="6" height="6" rx="1.5"/><rect x="13.5" y="4.5" width="6" height="6" rx="1.5"/><rect x="4.5" y="13.5" width="6" height="6" rx="1.5"/><rect x="13.5" y="13.5" width="6" height="6" rx="1.5"/>',
+  list: '<path d="M9 7h11M9 12h11M9 17h11M4.5 7h.01M4.5 12h.01M4.5 17h.01"/>',
+  pen: '<path d="M5 19l1-4 9.5-9.5a2.1 2.1 0 0 1 3 3L9 18zM13.5 7.5l3 3"/>',
+  send: '<path d="M4 12 20 4l-6 16-3-7z"/>',
+  mail: '<rect x="4" y="6" width="16" height="12" rx="2"/><path d="m4.5 7.5 7.5 5.5 7.5-5.5"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  user: '<circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6"/>',
+  info: '<circle cx="12" cy="12" r="8"/><path d="M12 11v5M12 8h.01"/>',
+  logout: '<path d="M10 5H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4M14 8l4 4-4 4M18 12H9"/>',
+  calplus: '<path d="M5 7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2zM5 10h14M9 3v4M15 3v4M12 13v4M10 15h4"/>',
+};
+const ic = (n, cls = "i") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
+
+/* ── data ─────────────────────────────────────
+   Nu = echte data (leden, groepen uit de seed, activiteiten uit de testset).
+   Straks = voorbeeldvulling; plekken zonder echte inhoud staan tussen [haken]. */
+const TODAY = "vrijdag 12 juni 2026";
+const ME = "evan";
+const TINTS = ["#f3dcd4", "#dbe3f1", "#e6e0f0", "#dcebe2", "#f2e8d3", "#e3eef0"];
+const MEMBERS_NU = [
+  { id: "evan", name: "Evan Poul", ini: "EP", tint: TINTS[0], role: "[Rol uit profiel]", place: "[Woonplaats]", badges: ["Beheerder"], open: [] },
+  { id: "ashraf", name: "Ashraf Arab", ini: "AA", tint: TINTS[1], role: "[Rol uit profiel]", place: "[Woonplaats]", badges: ["Beheerder"], open: [] },
+];
+const MEMBERS_STRAKS = [
+  { id: "m1", name: "[Naam lid]", ini: "", tint: TINTS[2], role: "Cloud engineer", place: "[Plaats]", badges: ["Nieuw"], open: ["mentor"], ex: true },
+  { id: "m2", name: "[Naam lid]", ini: "", tint: TINTS[3], role: "Security analist", place: "[Plaats]", badges: [], open: ["kansen"], ex: true },
+  { id: "m3", name: "[Naam lid]", ini: "", tint: TINTS[4], role: "Product designer", place: "[Plaats]", badges: ["Nieuw"], open: ["spreker"], ex: true },
+  { id: "m4", name: "[Naam lid]", ini: "", tint: TINTS[5], role: "Data engineer", place: "[Plaats]", badges: [], open: ["mentor", "spreker"], ex: true },
+  { id: "m5", name: "[Naam lid]", ini: "", tint: TINTS[2], role: "Student informatica", place: "[Plaats]", badges: [], open: ["kansen"], ex: true },
+  { id: "m6", name: "[Naam lid]", ini: "", tint: TINTS[3], role: "IT-recruiter", place: "[Plaats]", badges: [], open: [], ex: true },
+];
+const GROUPS = [
+  { slug: "security-specialists", name: "Security specialists", cat: "Vakgroep", crop: "c-arch", desc: "Cybersecurity, risico, compliance en veilig bouwen binnen de community.", ex: 23 },
+  { slug: "engineers", name: "Engineers", cat: "Vakgroep", crop: "c-circuit", desc: "Bouwers van software, data, cloud en platformen die praktische kennis delen.", ex: 41 },
+  { slug: "product-design", name: "Product & design", cat: "Vakgroep", crop: "c-wave", desc: "Productmanagers, UX-designers en makers die betere digitale producten maken.", ex: 17 },
+  { slug: "football", name: "Voetbal", cat: "Sociaal", crop: "c-canal", desc: "Een lichtere plek voor leden die elkaar vinden rond voetbal.", ex: 29 },
+];
+const EVENTS = [
+  { slug: "tech-talk", title: "Tech Talk: AI-agents in de praktijk", cat: "Kennis", d: "16", m: "jun", dow: "dinsdag", time: "19:30 tot 21:00", loc: "Online via Google Meet", online: true, crop: "c-wave", group: "engineers", ex: 14,
+    desc: "Twee leden laten zien hoe zij AI-agents inzetten in hun dagelijkse werk: van code-review tot klantenservice-automatisering. Met live demo's en ruimte voor vragen. Online via Google Meet, kort en praktisch." },
+  { slug: "lunchwebinar", title: "Lunchwebinar: Cloud security fundamentals", cat: "Kennis", d: "18", m: "jun", dow: "donderdag", time: "12:00 tot 13:00", loc: "Online via Google Meet", online: true, crop: "c-arch", group: "security-specialists", ex: 9,
+    desc: "Compact lunchwebinar door onze security specialists: de vijf meest gemaakte fouten in Azure- en AWS-omgevingen, en hoe je ze voorkomt. Neem je eigen vragen mee." },
+  { slug: "zomerborrel", title: "IN-IT zomerborrel & netwerkavond", cat: "Community", d: "25", m: "jun", dow: "donderdag", time: "18:00 tot 21:30", loc: "Strandzuid, Amsterdam", crop: "c-canal", ex: 31,
+    desc: "De zomereditie van onze netwerkborrel: bijpraten met bekende gezichten, nieuwe leden verwelkomen en informeel kennis uitwisselen. Partners en voorgedragen vrienden van IN-IT zijn welkom. Eerste drankje van de community." },
+  { slug: "cv-review", title: "Workshop: CV & LinkedIn review night", cat: "Workshop", d: "2", m: "jul", dow: "donderdag", time: "19:00 tot 21:00", loc: "Seats2meet, Utrecht Centraal", crop: "c-circuit", ex: 12,
+    desc: "Breng je CV of LinkedIn-profiel mee en krijg directe feedback van recruiters en senior leden uit het netwerk. In kleine groepen, dus iedereen komt aan bod. Aanmelden verplicht, beperkt aantal plekken." },
+  { slug: "mentorship", title: "Mentorship-programma: kick-off Q3", cat: "Community", d: "9", m: "jul", dow: "donderdag", time: "19:00 tot 20:00", loc: "Online via Google Meet", online: true, crop: "c-lion", ex: 8,
+    desc: "Aftrap van de derde mentorship-ronde. We koppelen mentoren aan mentees, leggen het programma uit en delen ervaringen uit de vorige ronde. Ook interessant als je twijfelt of mentorschap iets voor je is." },
+  { slug: "voetbal-bbq", title: "Voetbal & BBQ in het Westerpark", cat: "Social", d: "19", m: "jul", dow: "zondag", time: "14:00 tot 18:00", loc: "Westerpark, Amsterdam", crop: "c-bridge", group: "football", ex: 19,
+    desc: "De social zomerklassieker: een vriendschappelijk potje voetbal gevolgd door BBQ in het park. Familie is welkom, meedoen of aanmoedigen mag allebei. Bij regen verplaatsen we naar een latere datum." },
+];
+const EX_POSTS = {
+  engineers: [{ id: "x1", who: "m1", time: "2 uur geleden", text: "[Vraag van een lid, bijvoorbeeld over een tool of een aanpak]", likes: 6, replies: [{ who: "m4", text: "[Antwoord van een ander lid]" }] }],
+  "security-specialists": [{ id: "x2", who: "m2", time: "gisteren", text: "[Bericht met een link naar een artikel of melding]", likes: 4, replies: [] }],
+  football: [{ id: "x3", who: "m5", time: "3 dagen geleden", text: "[Wie doet er mee zondag?]", likes: 9, replies: [] }],
+  "product-design": [],
+};
+const EX_STORIES = [
+  { id: "s1", title: "[Titel van een verhaal]", who: "m3", crop: "c-wide", excerpt: "[Eerste regels van het verhaal van een lid over een project, een carrièrestap of een les.]", week: true },
+  { id: "s2", title: "[Titel van een verhaal]", who: "m4", crop: "c-lion", excerpt: "[Eerste regels van het verhaal.]" },
+  { id: "s3", title: "[Titel van een verhaal]", who: "m1", crop: "c-bridge", excerpt: "[Eerste regels van het verhaal.]" },
+];
+
+const S = {
+  view: "today", param: null, mode: "nu", device: "desktop",
+  joined: new Set(), rsvp: {}, posts: {}, liked: new Set(), openReplies: new Set(),
+  stories: [], steps: { profile: true, group: false, rsvp: false }, welcomeGone: false,
+  memberView: "grid", memberFilter: "alle", memberQ: "", groupTab: "alle", agendaCat: "Alles", profTab: "over", groupSub: "gesprek",
+};
+const straks = () => S.mode === "straks";
+const members = () => (straks() ? [...MEMBERS_NU, ...MEMBERS_STRAKS] : MEMBERS_NU);
+const member = (id) => members().find((m) => m.id === id) || MEMBERS_NU[0];
+const group = (slug) => GROUPS.find((g) => g.slug === slug);
+const event = (slug) => EVENTS.find((e) => e.slug === slug);
+const av = (m, cls = "") => `<span class="av ${cls} ${m.ex ? "slot" : ""}" style="${m.ex ? "" : `background:${m.tint}`}">${m.ex ? "" : m.ini}</span>`;
+const nm = (m) => (m.ex ? `<span class="slot">${esc(m.name)}</span>` : esc(m.name));
+const tx = (t) => (/^\[.*\]$/.test(t) ? `<span class="slot">${esc(t)}</span>` : esc(t));
+const cover = (crop, extra = "", attrs = "") => `<div class="cover ${crop} ${extra}" ${attrs}><div class="cover-in"></div></div>`;
+const groupCount = (g) => (straks() ? g.ex : 0) + (S.joined.has(g.slug) ? 1 : 0);
+const goingCount = (e) => (straks() ? e.ex : 0) + (S.rsvp[e.slug] === "going" ? 1 : 0);
+const postsOf = (slug) => [...(S.posts[slug] || []), ...(straks() ? EX_POSTS[slug] || [] : [])];
+const stories = () => [...S.stories, ...(straks() ? EX_STORIES : [])];
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+/* ── navigatie ───────────────────────────────── */
+const NAV = [
+  { key: "today", label: "Vandaag", icon: "home" },
+  { key: "members", label: "Leden", icon: "users" },
+  { key: "groups", label: "Groepen", icon: "groups" },
+  { key: "agenda", label: "Agenda", icon: "cal" },
+  { key: "stories", label: "Verhalen", icon: "book" },
+];
+const navKey = () => ({ group: "groups", event: "agenda", profile: S.param === ME ? null : "members", story: "stories" }[S.view] ?? S.view);
+
+function renderNav() {
+  const upcoming = EVENTS.filter((e) => !S.rsvp[e.slug]).length;
+  $("#nav").innerHTML = '<span class="ind" id="navInd"></span>' + NAV.map((n) =>
+    `<button type="button" data-go="${n.key}" data-nav="${n.key}">${ic(n.icon)}${n.label}${n.key === "agenda" ? `<span class="count num">${upcoming}</span>` : ""}</button>`).join("");
+  $("#tabs").innerHTML = '<span class="ind" id="tabInd"></span>' + NAV.slice(0, 4).map((n) =>
+    `<button type="button" data-go="${n.key}" data-tab="${n.key}">${ic(n.icon)}${n.label}</button>`).join("");
+  syncNav(true);
+}
+function syncNav(instant) {
+  const k = navKey();
+  $$("#nav [data-nav]").forEach((b) => b.classList.toggle("on", b.dataset.nav === k));
+  $$("#tabs [data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === k));
+  const ind = $("#navInd"), act = $(`#nav [data-nav="${k}"]`);
+  if (ind) {
+    if (instant) ind.style.transition = "none";
+    ind.style.opacity = act ? "1" : "0";
+    if (act) ind.style.transform = `translateY(${act.offsetTop}px)`;
+    if (instant) { ind.offsetHeight; ind.style.transition = ""; }
+  }
+  const tind = $("#tabInd"), idx = NAV.slice(0, 4).findIndex((n) => n.key === k);
+  if (tind) { tind.style.opacity = idx < 0 ? "0" : "1"; if (idx >= 0) tind.style.transform = `translateX(${idx * 100}%)`; }
+}
+function renderMine() {
+  const mine = GROUPS.filter((g) => S.joined.has(g.slug));
+  $("#mine").innerHTML = mine.length
+    ? mine.map((g) => `<button type="button" data-go="group:${g.slug}"><span class="cv cover ${g.crop}"></span>${esc(g.name)}</button>`).join("")
+    : '<p class="mine-empty">Word lid van een groep, dan staat hij hier.</p>';
+}
+
+function go(target, sourceEl) {
+  const [view, param = null] = target.split(":");
+  const doRender = () => { S.view = view; S.param = param; renderMain(); syncNav(); $("#main").scrollTop = 0; };
+  const cv = sourceEl?.querySelector?.("[data-cover]") || (sourceEl?.matches?.("[data-cover]") ? sourceEl : null);
+  if (!document.startViewTransition || reduced()) { doRender(); return; }
+  if (cv) cv.style.viewTransitionName = "hero-cover";
+  document.startViewTransition(doRender);
+}
+
+/* ── schermen ────────────────────────────────── */
+function renderMain() {
+  const views = { today: vToday, members: vMembers, profile: vProfile, groups: vGroups, group: vGroup, agenda: vAgenda, event: vEvent, stories: vStories, story: vStory };
+  $("#main").innerHTML = `<div class="page">${(views[S.view] || vToday)()}</div>`;
+  const rs = $("#main .rsvp"); if (rs) placeRsvp(rs, true);
+}
+
+function vToday() {
+  const done = Object.values(S.steps).filter(Boolean).length;
+  const next = EVENTS.find((e) => S.rsvp[e.slug] === "going") || EVENTS[0];
+  const discover = GROUPS.filter((g) => !S.joined.has(g.slug));
+  const others = members().filter((m) => m.id !== ME).slice(0, 4);
+  const myPosts = straks() ? GROUPS.flatMap((g) => postsOf(g.slug).map((p) => ({ ...p, g }))).slice(0, 3) : GROUPS.filter((g) => S.joined.has(g.slug)).flatMap((g) => (S.posts[g.slug] || []).map((p) => ({ ...p, g }))).slice(0, 3);
+  const story = stories().find((s) => s.week) || stories()[0];
+  const welcome = !S.welcomeGone ? `
+    <section class="panel welcome" id="welcome">
+      <div class="l"><h3>Welkom bij IN-IT</h3><p class="muted">Drie stappen en je bent helemaal binnen.</p></div>
+      <div class="steps">
+        ${step("profile", "Profiel compleet", "profile:" + ME)}
+        ${step("group", "Kies een groep", "groups")}
+        ${step("rsvp", "Meld je aan voor een activiteit", "agenda")}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px"><div class="progress"><i style="transform:scaleX(${done / 3})"></i></div><small class="muted num">${done} van 3</small></div>
+    </section>` : "";
+
+  const feat = story && straks() ? `
+    <button type="button" class="panel flush feature" data-go="story:${story.id}">
+      ${cover(story.crop, "", "data-cover")}
+      <div class="fb"><span class="kick">${ic("book")}Verhaal van de week</span><h2>${tx(story.title)}</h2><p class="desc">${tx(story.excerpt)}</p>
+      <div class="row">${av(member(story.who), "sm")}<small class="muted">${nm(member(story.who))}</small></div></div>
+    </button>` : `
+    <button type="button" class="panel flush feature" data-go="event:${next.slug}">
+      ${cover(next.crop, "", "data-cover")}
+      <div class="fb"><span class="kick">${ic("cal")}${S.rsvp[next.slug] === "going" ? "Jij gaat" : "Volgende activiteit"}</span><h2>${esc(next.title)}</h2>
+      <p class="desc">${esc(next.desc)}</p>
+      <div class="row"><span class="chip soft">${ic("clock")}${next.dow} ${next.d} ${next.m}, ${next.time.split(" ")[0]}</span><span class="chip soft">${ic(next.online ? "video" : "pin")}${esc(next.online ? "Online" : next.loc.split(",")[0])}</span></div></div>
+    </button>`;
+
+  return `
+    <div class="hello"><div><h1>Goedemiddag, Evan</h1><p>${TODAY}</p></div>
+      <button class="btn primary mob-only" type="button" data-action="create">${ic("plus")}Deel iets</button></div>
+    ${welcome}
+    <div class="cols">
+      <div class="stack">
+        ${feat}
+        <section class="panel">
+          <div class="ph"><h3>Binnenkort <span class="badge num">${EVENTS.length}</span></h3><button class="link" type="button" data-go="agenda">Hele agenda</button></div>
+          <div class="rows">${EVENTS.slice(0, 3).map(eRow).join("")}</div>
+        </section>
+        ${myPosts.length ? `<section class="panel"><div class="ph"><h3>Uit jouw groepen</h3>${straks() ? "" : ""}</div><div class="rows">${myPosts.map((p) => `
+          <button type="button" class="erow" data-go="group:${p.g.slug}">${av(p.who === ME ? member(ME) : member(p.who), "sm")}<span class="t"><b>${tx(p.text)}</b><small>${nm(p.who === ME ? member(ME) : member(p.who))} in ${esc(p.g.name)}</small></span>${ic("arrow")}</button>`).join("")}</div></section>` : ""}
+        ${discover.length ? `<section>
+          <div class="ph"><h3>Groepen om te ontdekken</h3><button class="link" type="button" data-go="groups">Alle groepen</button></div>
+          <div class="tiles">${discover.slice(0, 2).map(gTile).join("")}</div>
+        </section>` : ""}
+      </div>
+      <aside class="stack aside">
+        <section class="panel">
+          <div class="ph"><h3>Leer kennen <span class="badge num">${others.length}</span></h3><button class="link" type="button" data-go="members">Alle</button></div>
+          ${others.map((m) => `<button type="button" class="person" data-go="profile:${m.id}">${av(m)}<span class="t"><b>${nm(m)}</b><small>${m.badges.includes("Beheerder") ? "Beheerder" : esc(m.role)}</small></span><span class="round" aria-hidden="true">${ic("arrow")}</span></button>`).join("")}
+        </section>
+        <section class="panel">
+          <div class="ph"><h3>Jouw aanmeldingen</h3></div>
+          ${Object.keys(S.rsvp).filter((k) => S.rsvp[k] === "going").length
+            ? EVENTS.filter((e) => S.rsvp[e.slug] === "going").map((e) => `<button type="button" class="erow" data-go="event:${e.slug}"><span class="date accent"><b class="num">${e.d}</b><small>${e.m}</small></span><span class="t"><b>${esc(e.title)}</b><small>${e.time}</small></span></button>`).join("")
+            : `<p class="muted" style="font-size:14px">Nog nergens voor aangemeld. De eerstvolgende is ${esc(EVENTS[0].title.split(":")[0])} op ${EVENTS[0].dow} ${EVENTS[0].d} ${EVENTS[0].m}.</p>`}
+        </section>
+        <section class="navycard">
+          <h3>Ken je iemand voor IN-IT?</h3>
+          <p>Draag een collega of vriend voor. De coördinator kijkt mee en stuurt een uitnodiging.</p>
+          <button class="btn" type="button" data-action="nominate">Draag iemand voor</button>
+        </section>
+      </aside>
+    </div>`;
+}
+function step(key, label, target) {
+  return `<button type="button" class="step ${S.steps[key] ? "done" : ""}" data-go="${target}"><span class="ck">${ic("check")}</span>${label}</button>`;
+}
+function eRow(e) {
+  const going = S.rsvp[e.slug] === "going";
+  return `<button type="button" class="erow" data-go="event:${e.slug}">
+    <span class="date ${going ? "accent" : ""}"><b class="num">${e.d}</b><small>${e.m}</small></span>
+    <span class="t"><b>${esc(e.title)}</b><small>${ic(e.online ? "video" : "pin")}${esc(e.loc)} · ${e.time.split(" ")[0]}</small></span>
+    ${going ? `<span class="chip soft" style="color:var(--ok);background:var(--ok-soft)">${ic("check")}Je gaat</span>` : `<span class="chip">${e.cat}</span>`}
+  </button>`;
+}
+function gTile(g, wide) {
+  const n = groupCount(g), j = S.joined.has(g.slug);
+  return `<article class="tile ${wide === true ? "wide" : ""}" data-go="group:${g.slug}" role="link" tabindex="0">
+    ${cover(g.crop, "", "data-cover")}
+    <div class="body"><h4>${esc(g.name)}</h4><p class="desc">${esc(g.desc)}</p></div>
+    <div class="foot">
+      <span class="chip soft">${ic("users")}<span class="num">${n ? plural(n, "lid", "leden") : "Nog geen leden"}</span></span>
+      <span class="chip tag">${g.cat}</span>
+      <span style="flex:1"></span>
+      <button type="button" class="btn sm ${j ? "joined" : "ghost"}" data-action="join:${g.slug}">${j ? ic("check") + "Lid" : "Word lid"}</button>
+    </div>
+  </article>`;
+}
+
+function vMembers() {
+  const q = S.memberQ.toLowerCase();
+  const all = members();
+  const counts = { alle: all.length, mentor: all.filter((m) => m.open.includes("mentor")).length, kansen: all.filter((m) => m.open.includes("kansen")).length, spreker: all.filter((m) => m.open.includes("spreker")).length };
+  const list = all.filter((m) => (S.memberFilter === "alle" || m.open.includes(S.memberFilter)) && (!q || (m.name + " " + m.role).toLowerCase().includes(q)));
+  const labels = { alle: "Alle leden", mentor: "Mentor", kansen: "Open voor kansen", spreker: "Spreker" };
+  return `
+    <div class="hello"><div><h1>Leden</h1><p>Vind iemand op vakgebied, rol of waar ze voor openstaan.</p></div></div>
+    <div class="toolbar">
+      <div class="pills seg-pills">${Object.keys(labels).map((k) => `<button type="button" class="pill ${S.memberFilter === k ? "on" : ""}" data-set="memberFilter:${k}">${labels[k]}<span class="badge num">${counts[k]}</span></button>`).join("")}</div>
+      <div style="display:flex;gap:10px;align-items:center;flex:1;justify-content:flex-end;min-width:0">
+        <label class="field">${ic("search")}<input id="mq" placeholder="Zoek op naam of rol" value="${esc(S.memberQ)}" aria-label="Zoek leden"></label>
+        <div class="viewtog desk-only"><button type="button" class="${S.memberView === "grid" ? "on" : ""}" data-set="memberView:grid" aria-label="Rasterweergave">${ic("grid")}</button><button type="button" class="${S.memberView === "list" ? "on" : ""}" data-set="memberView:list" aria-label="Lijstweergave">${ic("list")}</button></div>
+      </div>
+    </div>
+    <div id="mres">${memberResults(list)}</div>
+    ${!straks() ? `<p class="muted" style="font-size:13px">Er zijn nu twee leden. Filters op mentor en kansen vullen zich zodra leden dat in hun profiel aanzetten.</p>` : ""}`;
+}
+function memberResults(list) {
+  if (!list.length) return `<div class="panel empty"><span class="ring">${ic("search")}</span><h3>Niemand gevonden</h3><p>Probeer een andere rol of zet het filter terug op alle leden.</p></div>`;
+  const crops = ["c-wide", "c-arch", "c-canal", "c-wave", "c-lion", "c-bridge", "c-circuit"];
+  if (S.memberView === "list") return `<div class="mlist">${list.map((m) => `<button type="button" class="mrow" data-go="profile:${m.id}">${av(m)}<span class="t"><b>${nm(m)}</b><small>${tx(m.role)} · ${tx(m.place)}</small></span>${m.badges.map((b) => `<span class="chip tag">${b}</span>`).join("")}${ic("arrow")}</button>`).join("")}</div>`;
+  return `<div class="tiles three">${list.map((m, i) => `<article class="tile mcard" data-go="profile:${m.id}" role="link" tabindex="0">${cover(crops[i % crops.length])}${av(m)}<div class="body" style="justify-items:center"><h4>${nm(m)}</h4><p class="muted" style="font-size:14px">${tx(m.role)}</p></div><div class="tags">${m.badges.map((b) => `<span class="chip tag">${b}</span>`).join("")}${m.open.map((o) => `<span class="chip tag">${{ mentor: "Mentor", kansen: "Open voor kansen", spreker: "Spreker" }[o]}</span>`).join("")}</div></article>`).join("")}</div>`;
+}
+
+function vProfile() {
+  const m = member(S.param), own = m.id === ME;
+  const gs = GROUPS.filter((g) => (own ? S.joined.has(g.slug) : false));
+  const evs = own ? EVENTS.filter((e) => S.rsvp[e.slug] === "going") : [];
+  const tabs = { over: ["Over", null], groepen: ["Groepen", gs.length], activiteit: ["Activiteiten", evs.length] };
+  let body = "";
+  if (S.profTab === "over") body = `<section class="panel about"><dl class="kv">
+      <dt>Rol</dt><dd>${tx(m.role)}</dd><dt>Woonplaats</dt><dd>${tx(m.place)}</dd>
+      <dt>Kan helpen met</dt><dd><span class="slot">[Vaardigheden uit profiel]</span></dd>
+      <dt>Zoekt</dt><dd><span class="slot">[Waar dit lid naar zoekt]</span></dd>
+      <dt>Talen</dt><dd><span class="slot">[Talen]</span></dd></dl></section>`;
+  else if (S.profTab === "groepen") body = gs.length ? `<div class="tiles">${gs.map(gTile).join("")}</div>` : `<div class="panel empty"><span class="ring">${ic("groups")}</span><h3>${own ? "Nog geen groepen" : "Groepen zijn privé"}</h3><p>${own ? "Word lid van een groep en hij verschijnt hier." : "Dit lid deelt zijn groepen niet op het profiel."}</p>${own ? `<button class="btn primary" type="button" data-go="groups">Groepen bekijken</button>` : ""}</div>`;
+  else body = evs.length ? `<section class="panel"><div class="rows">${evs.map(eRow).join("")}</div></section>` : `<div class="panel empty"><span class="ring">${ic("cal")}</span><h3>Geen aanmeldingen</h3><p>${own ? "Meld je aan voor een activiteit en die verschijnt hier." : "Dit lid heeft zich nog nergens voor aangemeld."}</p></div>`;
+  return `
+    <section class="panel prof">
+      <div class="cover c-wide" data-cover><div class="cover-in"></div>
+        <div class="stats"><div><b class="num">${gs.length}</b><small>groepen</small></div><div><b class="num">${evs.length}</b><small>activiteiten</small></div><div><b class="num">${stories().filter((x) => x.who === m.id).length}</b><small>verhalen</small></div></div>
+      </div>
+      <div class="row">
+        <div class="left">${own ? `<button class="btn ghost" type="button" data-action="toast:Bewerken opent het profielformulier">${ic("pen")}Profiel bewerken</button>` : `<button class="btn ghost" type="button" data-action="toast:Opent LinkedIn in een nieuw tabblad">${ic("check")}Verbinden</button><button class="icon-btn" type="button" aria-label="Bericht sturen" data-action="toast:Privéberichten komen later">${ic("mail")}</button>`}</div>
+        <div class="center">${av(m)}<h2>${nm(m)}</h2><p>${tx(m.role)}, ${tx(m.place)}</p></div>
+        <div class="right"><button class="icon-btn" type="button" aria-label="LinkedIn" data-action="toast:Opent het LinkedIn-profiel"><span class="in">in</span></button></div>
+      </div>
+    </section>
+    <div class="toolbar"><div class="pills seg-pills">${Object.entries(tabs).map(([k, [l, n]]) => `<button type="button" class="pill ${n === null ? "no-count" : ""} ${S.profTab === k ? "on" : ""}" data-set="profTab:${k}">${l}${n === null ? "" : `<span class="badge num">${n}</span>`}</button>`).join("")}</div>
+      ${m.badges.length ? `<div style="display:flex;gap:6px">${m.badges.map((b) => `<span class="chip">${b}</span>`).join("")}</div>` : ""}</div>
+    ${body}`;
+}
+
+function vGroups() {
+  const list = S.groupTab === "mijn" ? GROUPS.filter((g) => S.joined.has(g.slug)) : GROUPS;
+  return `
+    <div class="hello"><div><h1>Groepen</h1><p>Vakgroepen en sociale plekken binnen IN-IT.</p></div></div>
+    <div class="toolbar"><div class="pills seg-pills">
+      <button type="button" class="pill ${S.groupTab === "alle" ? "on" : ""}" data-set="groupTab:alle">Alle groepen<span class="badge num">${GROUPS.length}</span></button>
+      <button type="button" class="pill ${S.groupTab === "mijn" ? "on" : ""}" data-set="groupTab:mijn">Mijn groepen<span class="badge num">${S.joined.size}</span></button></div></div>
+    ${list.length ? `<div class="tiles">${list.map((g, i) => gTile(g, i === 0 && S.groupTab === "alle")).join("")}</div>`
+      : `<div class="panel empty"><span class="ring">${ic("groups")}</span><h3>Je bent nog nergens lid</h3><p>Groepen zijn de plek voor gesprekken met vakgenoten. Kies er een om mee te beginnen.</p><button class="btn primary" type="button" data-set="groupTab:alle">Alle groepen bekijken</button></div>`}`;
+}
+
+function vGroup() {
+  const g = group(S.param), j = S.joined.has(g.slug), n = groupCount(g);
+  const ps = postsOf(g.slug);
+  const related = EVENTS.filter((e) => e.group === g.slug);
+  const stackMembers = [...(j ? [member(ME)] : []), ...(straks() ? MEMBERS_STRAKS.slice(0, 4) : [])];
+  const subs = { gesprek: `Gesprek`, leden: `Leden` };
+  let body;
+  if (S.groupSub === "leden") {
+    body = stackMembers.length ? `<div class="mlist">${stackMembers.map((m) => `<button type="button" class="mrow" data-go="profile:${m.id}">${av(m)}<span class="t"><b>${nm(m)}</b><small>${tx(m.role)}</small></span>${ic("arrow")}</button>`).join("")}</div>`
+      : `<div class="panel empty"><span class="ring">${ic("users")}</span><h3>Nog geen leden</h3><p>Word als eerste lid en start het gesprek.</p></div>`;
+  } else {
+    body = `
+      ${j ? `<section class="panel"><div class="composer">${av(member(ME), "sm")}<div style="flex:1;min-width:0"><textarea id="composer" placeholder="Deel iets met ${esc(g.name)}" aria-label="Nieuw bericht"></textarea><div class="actions"><button class="btn primary sm" type="button" data-action="post:${g.slug}">${ic("send")}Plaatsen</button></div></div></div></section>`
+        : `<section class="panel" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><p class="muted">Word lid om mee te praten in deze groep.</p><button class="btn primary sm" type="button" data-action="join:${g.slug}">Word lid</button></section>`}
+      <div class="stack" id="posts">${ps.length ? ps.map((p) => postHTML(p, g.slug)).join("") : `<div class="panel empty"><span class="ring">${ic("chat")}</span><h3>Nog geen berichten</h3><p>${j ? "Stel een vraag of deel iets wat je tegenkwam. Het eerste bericht zet de toon." : "Zodra iemand iets deelt, zie je het hier."}</p></div>`}</div>`;
+  }
+  return `
+    <section class="panel flush ghead">
+      ${cover(g.crop, "", 'data-cover style="view-transition-name:hero-cover"')}
+      <button class="icon-btn back" type="button" data-go="groups" aria-label="Terug naar groepen">${ic("back")}</button>
+      <div class="gb">
+        <div><span class="chip tag">${g.cat}</span><h1 style="margin-top:8px">${esc(g.name)}</h1><p>${esc(g.desc)}</p>
+          <div class="meta"><span class="avstack" id="gstack">${stackMembers.slice(0, 5).map((m) => av(m, "xs")).join("")}</span><span class="muted num" style="font-size:14px">${n ? plural(n, "lid", "leden") : "Nog geen leden"}</span></div></div>
+        <button class="btn ${j ? "joined" : "primary"}" type="button" data-action="join:${g.slug}">${j ? ic("check") + "Je bent lid" : "Word lid"}</button>
+      </div>
+    </section>
+    <div class="cols">
+      <div class="stack">
+        <div class="pills seg-pills">${Object.entries(subs).map(([k, l]) => `<button type="button" class="pill no-count ${S.groupSub === k ? "on" : ""}" data-set="groupSub:${k}">${l}</button>`).join("")}</div>
+        ${body}
+      </div>
+      <aside class="stack aside">
+        <section class="panel"><div class="ph"><h3>Beheerders</h3></div>${MEMBERS_NU.map((m) => `<button type="button" class="person" data-go="profile:${m.id}">${av(m, "sm")}<span class="t"><b>${nm(m)}</b><small>Beheerder</small></span></button>`).join("")}</section>
+        ${related.length ? `<section class="panel"><div class="ph"><h3>Activiteit van deze groep</h3></div><div class="rows">${related.map(eRow).join("")}</div></section>` : ""}
+      </aside>
+    </div>`;
+}
+function postHTML(p, slug, enter) {
+  const w = p.who === ME ? member(ME) : member(p.who);
+  const liked = S.liked.has(p.id), likes = (p.likes || 0) + (liked ? 1 : 0);
+  const open = S.openReplies.has(p.id);
+  return `<article class="post ${enter ? "enter" : ""}" data-post="${p.id}">
+    <div class="who">${av(w, "sm")}<div><b>${nm(w)}</b><small>${esc(p.time)}</small></div></div>
+    <p class="txt">${tx(p.text)}</p>
+    <div class="bar">
+      <button type="button" class="react ${liked ? "on" : ""}" data-action="like:${p.id}:${slug}" aria-pressed="${liked}">${ic("heart")}<span class="num">${likes || ""}</span>${likes ? "" : "Waardeer"}</button>
+      <button type="button" class="react" data-action="replies:${p.id}:${slug}">${ic("chat")}${p.replies.length ? plural(p.replies.length, "reactie", "reacties") : "Reageer"}</button>
+      <span class="later" title="Nieuwe functie, apart te besluiten">Nieuwe functie</span>
+    </div>
+    ${open ? `<div class="replies">${p.replies.map((r) => { const rm = r.who === ME ? member(ME) : member(r.who); return `<div class="reply ${r.fresh ? "post enter" : ""}" style="${r.fresh ? "padding:0;background:none" : ""}">${av(rm, "xs")}<div class="bub"><b>${nm(rm)}</b>${tx(r.text)}</div></div>`; }).join("")}
+      ${S.joined.has(slug) ? `<div class="replybox">${av(member(ME), "xs")}<input id="rb-${p.id}" placeholder="Schrijf een reactie" aria-label="Reactie"><button class="round" type="button" data-action="reply:${p.id}:${slug}" aria-label="Plaats reactie">${ic("send")}</button></div>` : ""}</div>` : ""}
+  </article>`;
+}
+
+function vAgenda() {
+  const cats = ["Alles", ...new Set(EVENTS.map((e) => e.cat))];
+  const list = EVENTS.filter((e) => S.agendaCat === "Alles" || e.cat === S.agendaCat);
+  const [first, ...rest] = list;
+  return `
+    <div class="hello"><div><h1>Agenda</h1><p>Wat er de komende weken gebeurt. Meld je aan met één klik.</p></div></div>
+    <div class="toolbar"><div class="pills seg-pills">${cats.map((c) => `<button type="button" class="pill ${S.agendaCat === c ? "on" : ""}" data-set="agendaCat:${c}">${c}<span class="badge num">${c === "Alles" ? EVENTS.length : EVENTS.filter((e) => e.cat === c).length}</span></button>`).join("")}</div></div>
+    ${first ? `
+    <button type="button" class="panel flush feature" data-go="event:${first.slug}">
+      ${cover(first.crop, "", "data-cover")}
+      <div class="fb"><span class="kick">${ic("cal")}Eerstvolgende</span><h2>${esc(first.title)}</h2><p class="desc">${esc(first.desc)}</p>
+        <div class="row"><span class="chip soft">${ic("clock")}${first.dow} ${first.d} ${first.m}, ${first.time}</span><span class="chip soft">${ic(first.online ? "video" : "pin")}${esc(first.loc)}</span></div></div>
+    </button>` : ""}
+    <div class="tiles three">${rest.map((e) => `
+      <article class="tile" data-go="event:${e.slug}" role="link" tabindex="0">
+        ${cover(e.crop, "", "data-cover")}
+        <div class="body" style="grid-template-columns:auto 1fr;gap:12px;align-items:start">
+          <span class="date ${S.rsvp[e.slug] === "going" ? "accent" : ""}"><b class="num">${e.d}</b><small>${e.m}</small></span>
+          <div style="display:grid;gap:3px;min-width:0"><h4>${esc(e.title)}</h4><p class="muted" style="font-size:13px">${esc(e.loc)}</p></div>
+        </div>
+        <div class="foot"><span class="chip soft">${ic("users")}<span class="num">${goingCount(e) ? `${goingCount(e)} gaan` : "Wees de eerste"}</span></span><span style="flex:1"></span>${S.rsvp[e.slug] === "going" ? `<span class="chip soft" style="color:var(--ok);background:var(--ok-soft)">${ic("check")}Je gaat</span>` : `<span class="chip tag">${e.cat}</span>`}</div>
+      </article>`).join("")}</div>`;
+}
+
+function vEvent() {
+  const e = event(S.param), r = S.rsvp[e.slug] || null, n = goingCount(e);
+  const who = [...(r === "going" ? [member(ME)] : []), ...(straks() ? MEMBERS_STRAKS.slice(0, 5) : [])];
+  return `
+    <section class="panel flush ghead">
+      ${cover(e.crop, "", 'data-cover style="view-transition-name:hero-cover"')}
+      <button class="icon-btn back" type="button" data-go="agenda" aria-label="Terug naar agenda">${ic("back")}</button>
+      <div class="gb">
+        <div style="display:flex;gap:16px;align-items:flex-start;min-width:0">
+          <span class="date accent" style="width:64px;height:68px"><b class="num" style="font-size:24px">${e.d}</b><small>${e.m}</small></span>
+          <div style="min-width:0"><span class="chip tag">${e.cat}</span><h1 style="margin-top:8px">${esc(e.title)}</h1></div>
+        </div>
+      </div>
+    </section>
+    <div class="cols">
+      <div class="stack">
+        <section class="panel"><div class="ph"><h3>Over deze activiteit</h3></div><p class="prose">${esc(e.desc)}</p></section>
+        <section class="panel">
+          <div class="ph"><h3>Wie er komen <span class="badge num" id="gocount"><span class="roll"><span>${n}</span></span></span></h3></div>
+          ${who.length ? `<div class="avstack" id="estack">${who.slice(0, 8).map((m) => av(m)).join("")}</div>` : `<p class="muted" id="estack">Nog niemand aangemeld. Jij kunt de eerste zijn.</p>`}
+        </section>
+      </div>
+      <aside class="stack aside">
+        <section class="panel" style="display:grid;gap:16px">
+          <div class="metalist">
+            <div><span class="ic">${ic("clock")}</span><span>${e.dow} ${e.d} ${e.m === "jun" ? "juni" : "juli"}<small>${e.time}</small></span></div>
+            <div><span class="ic">${ic(e.online ? "video" : "pin")}</span><span>${esc(e.loc)}<small>${e.online ? "Link verschijnt na aanmelden" : "Adres in de bevestiging"}</small></span></div>
+          </div>
+          <div class="rsvp" role="radiogroup" aria-label="Aanmelden">
+            <span class="thumb ${r === "going" ? "going" : ""}"></span>
+            <button type="button" role="radio" aria-checked="${r === "going"}" class="${r === "going" ? "on" : ""}" data-action="rsvp:${e.slug}:going">Ik kom</button>
+            <button type="button" role="radio" aria-checked="${r === "maybe"}" class="${r === "maybe" ? "on" : ""}" data-action="rsvp:${e.slug}:maybe">Misschien</button>
+            <button type="button" role="radio" aria-checked="${r === "no"}" class="${r === "no" ? "on" : ""}" data-action="rsvp:${e.slug}:no">Kan niet</button>
+          </div>
+          <button class="btn ghost" type="button" data-action="toast:In de app downloadt dit een agenda-bestand">${ic("calplus")}Zet in mijn agenda</button>
+        </section>
+      </aside>
+    </div>`;
+}
+
+function vStories() {
+  const all = stories();
+  if (!all.length) return `
+    <div class="hello"><div><h1>Verhalen</h1><p>Leden schrijven over projecten, carrièrestappen en lessen.</p></div><button class="btn primary" type="button" data-action="write">${ic("pen")}Schrijf een verhaal</button></div>
+    <div class="panel empty" style="padding:56px 20px"><span class="ring">${ic("book")}</span><h3>Nog geen verhalen</h3><p>Het eerste verhaal wordt automatisch uitgelicht op Vandaag. Een project, een overstap, iets wat je had willen weten toen je begon.</p><button class="btn primary" type="button" data-action="write">Schrijf het eerste verhaal</button></div>`;
+  const [top, ...rest] = all;
+  return `
+    <div class="hello"><div><h1>Verhalen</h1><p>Leden schrijven over projecten, carrièrestappen en lessen.</p></div><button class="btn primary" type="button" data-action="write">${ic("pen")}Schrijf een verhaal</button></div>
+    <button type="button" class="panel flush feature" data-go="story:${top.id}">${cover(top.crop, "", "data-cover")}<div class="fb"><span class="kick">${ic("book")}${top.week ? "Verhaal van de week" : "Nieuwste verhaal"}</span><h2>${tx(top.title)}</h2><p class="desc">${tx(top.excerpt)}</p><div class="row">${av(member(top.who), "sm")}<small class="muted">${nm(member(top.who))}</small></div></div></button>
+    ${rest.length ? `<div class="tiles">${rest.map((s) => `<article class="tile" data-go="story:${s.id}" role="link" tabindex="0">${cover(s.crop, "", "data-cover")}<div class="body"><h4>${tx(s.title)}</h4><p class="desc">${tx(s.excerpt)}</p></div><div class="foot">${av(member(s.who), "xs")}<small class="muted">${nm(member(s.who))}</small></div></article>`).join("")}</div>` : ""}`;
+}
+function vStory() {
+  const s = stories().find((x) => x.id === S.param) || stories()[0];
+  if (!s) return vStories();
+  const w = member(s.who);
+  return `
+    <section class="panel flush ghead">${cover(s.crop, "", 'data-cover style="view-transition-name:hero-cover"')}<button class="icon-btn back" type="button" data-go="stories" aria-label="Terug naar verhalen">${ic("back")}</button>
+      <div class="gb"><div><h1>${tx(s.title)}</h1><div class="meta">${av(w, "sm")}<span class="muted" style="font-size:14px">${nm(w)}</span></div></div></div></section>
+    <section class="panel"><p class="prose">${tx(s.body || s.excerpt)}</p></section>`;
+}
+
+/* ── interacties ─────────────────────────────── */
+function toast(msg) {
+  const t = document.createElement("div");
+  t.className = "toast"; t.setAttribute("role", "status");
+  t.innerHTML = ic("check") + esc(msg);
+  $("#app").appendChild(t);
+  requestAnimationFrame(() => t.classList.add("show"));
+  setTimeout(() => { t.classList.remove("show"); setTimeout(() => t.remove(), 260); }, 2300);
+}
+function completeStep(k) {
+  if (S.steps[k]) return;
+  S.steps[k] = true;
+  if (Object.values(S.steps).every(Boolean)) setTimeout(() => {
+    toast("Je bent helemaal binnen");
+    const w = $("#welcome");
+    if (w) { w.classList.add("leaving"); setTimeout(() => { S.welcomeGone = true; if (S.view === "today") renderMain(); }, 320); } else S.welcomeGone = true;
+  }, 450);
+}
+function toggleJoin(slug) {
+  const g = group(slug);
+  if (S.joined.has(slug)) { S.joined.delete(slug); toast(`Je hebt ${g.name} verlaten`); }
+  else { S.joined.add(slug); completeStep("group"); toast(`Welkom in ${g.name}`); }
+  renderMine(); renderMain();
+  const st = $("#gstack .av"); if (st && S.joined.has(slug)) st.classList.add("pop");
+}
+function setRsvp(slug, val) {
+  const prev = S.rsvp[slug];
+  S.rsvp[slug] = prev === val ? undefined : val;
+  if (S.rsvp[slug] === undefined) delete S.rsvp[slug];
+  if (S.rsvp[slug] === "going") { completeStep("rsvp"); toast("Aangemeld. Je krijgt een bevestiging per mail"); }
+  const rs = $("#main .rsvp");
+  const buttons = $$("button", rs);
+  const idx = ["going", "maybe", "no"].indexOf(S.rsvp[slug]);
+  buttons.forEach((b, i) => { b.classList.toggle("on", i === idx); b.setAttribute("aria-checked", String(i === idx)); });
+  placeRsvp(rs);
+  $("#gocount").innerHTML = `<span class="roll"><span>${goingCount(event(slug))}</span></span>`;
+  const who = [...(S.rsvp[slug] === "going" ? [member(ME)] : []), ...(straks() ? MEMBERS_STRAKS.slice(0, 5) : [])];
+  const holder = $("#estack");
+  const html = who.length ? `<div class="avstack" id="estack">${who.slice(0, 8).map((m, i) => av(m, i === 0 && S.rsvp[slug] === "going" ? "pop" : "")).join("")}</div>` : `<p class="muted" id="estack">Nog niemand aangemeld. Jij kunt de eerste zijn.</p>`;
+  holder.outerHTML = html;
+  renderNav();
+}
+function placeRsvp(rs, instant) {
+  const th = $(".thumb", rs), on = $$("button", rs).findIndex((b) => b.classList.contains("on"));
+  if (instant) th.style.transition = "none";
+  th.style.opacity = on < 0 ? "0" : "1";
+  if (on >= 0) th.style.transform = `translateX(${on * 100}%)`;
+  th.classList.toggle("going", on === 0);
+  if (instant) { th.offsetHeight; th.style.transition = ""; }
+}
+function post(slug) {
+  const ta = $("#composer"); const text = ta.value.trim();
+  if (!text) { ta.focus(); return; }
+  const p = { id: "p" + Date.now(), who: ME, time: "zojuist", text, likes: 0, replies: [] };
+  (S.posts[slug] ||= []).unshift(p);
+  ta.value = "";
+  const holder = $("#posts");
+  if (!$(".post", holder)) holder.innerHTML = "";
+  holder.insertAdjacentHTML("afterbegin", postHTML(p, slug, true));
+  toast("Geplaatst");
+}
+function findPost(id, slug) { return postsOf(slug).find((p) => p.id === id); }
+function rerenderPost(id, slug) {
+  const el = $(`[data-post="${id}"]`); if (el) el.outerHTML = postHTML(findPost(id, slug), slug);
+}
+
+/* overlays */
+let overlay = null;
+function closeOverlay() {
+  if (!overlay) return;
+  const { els, onClose } = overlay; overlay = null;
+  els.forEach((e) => e.classList.remove("show"));
+  setTimeout(() => els.forEach((e) => e.remove()), 220);
+  onClose?.();
+}
+function openOverlay(html, cls, { anchor, onClose, align = "right" } = {}) {
+  closeOverlay();
+  const app = $("#app");
+  const scrim = document.createElement("div"); scrim.className = "scrim"; scrim.dataset.action = "close";
+  const box = document.createElement("div"); box.className = cls; box.innerHTML = html;
+  box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true");
+  app.append(scrim, box);
+  if (anchor && cls === "pop") {
+    const a = anchor.getBoundingClientRect(), r = app.getBoundingClientRect();
+    const w = Math.min(340, r.width - 24);
+    box.style.width = w + "px";
+    box.style.top = a.bottom - r.top + 8 + "px";
+    let left = align === "right" ? a.right - r.left - w : a.left - r.left;
+    box.style.left = Math.max(12, Math.min(left, r.width - w - 12)) + "px";
+    box.style.transformOrigin = `${Math.min(w - 20, Math.max(20, a.left + a.width / 2 - r.left - parseFloat(box.style.left)))}px top`;
+  }
+  requestAnimationFrame(() => { scrim.classList.add("show"); box.classList.add("show"); });
+  overlay = { els: [scrim, box], onClose };
+  return box;
+}
+
+function openCmdk() {
+  const box = openOverlay(`<div class="q">${ic("search")}<input id="cq" placeholder="Zoek leden, groepen, activiteiten, verhalen" aria-label="Zoeken" autocomplete="off"><button class="icon-btn" style="width:32px;height:32px" type="button" data-action="close" aria-label="Sluiten">${ic("x")}</button></div><div class="res" id="cres"></div><div class="foot"><span><kbd>↑</kbd><kbd>↓</kbd>kiezen</span><span><kbd>↵</kbd>openen</span><span><kbd>esc</kbd>sluiten</span></div>`, "cmdk");
+  const input = $("#cq", box); let act = 0, items = [];
+  const draw = () => {
+    const q = input.value.trim().toLowerCase();
+    const m = (s) => !q || s.toLowerCase().includes(q);
+    const sec = [
+      ["Leden", members().filter((x) => m(x.name + " " + x.role)).slice(0, 4).map((x) => ({ go: "profile:" + x.id, lead: av(x, "sm"), t: nm(x), s: x.badges.includes("Beheerder") ? "Beheerder" : tx(x.role) }))],
+      ["Groepen", GROUPS.filter((g) => m(g.name + " " + g.desc)).map((g) => ({ go: "group:" + g.slug, lead: `<span class="cv cover ${g.crop}"></span>`, t: esc(g.name), s: g.cat }))],
+      ["Activiteiten", EVENTS.filter((e) => m(e.title + " " + e.loc + " " + e.cat)).slice(0, 4).map((e) => ({ go: "event:" + e.slug, lead: `<span class="date" style="width:34px;height:34px;border-radius:10px"><b class="num" style="font-size:13px">${e.d}</b></span>`, t: esc(e.title), s: `${e.dow} ${e.d} ${e.m} · ${esc(e.loc)}` }))],
+      ["Verhalen", stories().filter((s) => m(s.title + " " + s.excerpt)).slice(0, 3).map((s) => ({ go: "story:" + s.id, lead: `<span class="cv cover ${s.crop}"></span>`, t: tx(s.title), s: nm(member(s.who)) }))],
+    ].filter(([, l]) => l.length);
+    items = sec.flatMap(([, l]) => l); act = Math.min(act, Math.max(0, items.length - 1));
+    let i = 0;
+    $("#cres", box).innerHTML = '<span class="hl" id="hl"></span>' + (sec.length ? sec.map(([h, l]) => `<h6>${h}</h6>` + l.map((x) => `<button type="button" class="it" data-i="${i++}" data-go="${x.go}">${x.lead}<span class="t"><b>${x.t}</b><small>${x.s}</small></span><span class="go">${ic("arrow")}</span></button>`).join("")).join("")
+      : `<div class="empty"><span class="ring">${ic("search")}</span><p>Niets gevonden voor "${esc(input.value)}". Probeer een naam, vakgebied of plaats.</p></div>`);
+    hl(true);
+  };
+  const hl = (instant) => {
+    const el = $(`#cres [data-i="${act}"]`, box), h = $("#hl", box);
+    $$("#cres .it", box).forEach((x) => x.classList.toggle("act", x === el));
+    if (!el) { h.style.height = "0"; return; }
+    if (instant) h.style.transition = "none";
+    h.style.transform = `translateY(${el.offsetTop}px)`; h.style.height = el.offsetHeight + "px";
+    if (instant) { h.offsetHeight; h.style.transition = ""; }
+    el.scrollIntoView({ block: "nearest" });
+  };
+  input.addEventListener("input", () => { act = 0; draw(); });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown") { e.preventDefault(); act = Math.min(act + 1, items.length - 1); hl(); }
+    if (e.key === "ArrowUp") { e.preventDefault(); act = Math.max(act - 1, 0); hl(); }
+    if (e.key === "Enter" && items[act]) { const t = items[act].go; closeOverlay(); go(t); }
+  });
+  $("#cres", box).addEventListener("mousemove", (e) => { const it = e.target.closest(".it"); if (it && +it.dataset.i !== act) { act = +it.dataset.i; hl(); } });
+  draw(); setTimeout(() => input.focus(), 30);
+}
+function openCreate(anchor) {
+  const html = `<h6>Deel iets</h6>
+    <button type="button" class="mi" data-action="newpost"><span class="ic">${ic("chat")}</span><span><b>Bericht in een groep</b><small>Een vraag, tip of link voor vakgenoten</small></span></button>
+    <button type="button" class="mi" data-action="write"><span class="ic">${ic("pen")}</span><span><b>Verhaal schrijven</b><small>Een project, overstap of les, voor alle leden</small></span></button>`;
+  if (S.device === "mobile" || $("#app").offsetWidth <= 700) openSheet(html); else openOverlay(html, "pop", { anchor });
+}
+function openNotif(anchor) {
+  const body = straks() ? `
+    <button type="button" class="mi" data-go="group:engineers"><span class="ic">${ic("chat")}</span><span><b>2 nieuwe berichten in Engineers</b><small>Sinds je laatste bezoek</small></span></button>
+    <button type="button" class="mi" data-go="event:tech-talk"><span class="ic">${ic("cal")}</span><span><b>Tech Talk is over 4 dagen</b><small>14 leden gaan</small></span></button>
+    <button type="button" class="mi" data-go="members"><span class="ic">${ic("users")}</span><span><b>3 nieuwe leden deze week</b><small>Twee in jouw vakgebied</small></span></button>`
+    : `<div class="empty" style="padding:22px 12px"><span class="ring">${ic("check")}</span><p>Je bent bij. Meldingen verschijnen hier als iemand reageert of er een activiteit bijkomt in jouw groepen.</p></div>`;
+  const html = `<h6>Meldingen <span class="later">Nieuwe functie</span></h6>${body}`;
+  if ($("#app").offsetWidth <= 700) openSheet(html); else openOverlay(html, "pop", { anchor });
+}
+function openMenu(anchor) {
+  const html = `
+    <button type="button" class="mi" data-go="profile:${ME}"><span class="ic">${ic("user")}</span><span><b>Mijn profiel</b><small>Zoals andere leden je zien</small></span></button>
+    <button type="button" class="mi mob-only" data-go="stories"><span class="ic">${ic("book")}</span><span><b>Verhalen</b><small>Wat leden schrijven</small></span></button>
+    <button type="button" class="mi" data-action="toast:Instellingen: profielvelden, privacy en e-mail"><span class="ic">${ic("pen")}</span><span><b>Instellingen</b><small>Privacy en e-mail</small></span></button>
+    <button type="button" class="mi" data-action="toast:Over IN-IT opent de publieke pagina"><span class="ic">${ic("info")}</span><span><b>Over IN-IT en contact</b><small>De publieke site</small></span></button>
+    <button type="button" class="mi" data-action="toast:Beheer blijft een eigen omgeving"><span class="ic">${ic("grid")}</span><span><b>Beheer</b><small>Aanvragen, leden, invites</small></span></button>
+    <button type="button" class="mi" data-action="toast:Uitloggen werkt in de echte app"><span class="ic">${ic("logout")}</span><span><b>Uitloggen</b></span></button>`;
+  if ($("#app").offsetWidth <= 700) openSheet(html); else openOverlay(html, "pop", { anchor });
+}
+function openSheet(html) { openOverlay(`<div class="grab"></div>${html}`, "sheet"); }
+function openModal(kind) {
+  if (kind === "post") {
+    const box = openOverlay(`<h3>Bericht in een groep</h3>
+      <label>Groep<select id="mgroup">${GROUPS.map((g) => `<option value="${g.slug}" ${S.joined.has(g.slug) ? "" : ""}>${esc(g.name)}${S.joined.has(g.slug) ? "" : " (je wordt lid)"}</option>`).join("")}</select></label>
+      <label>Bericht<textarea id="mtext" placeholder="Wat wil je delen?"></textarea></label>
+      <div class="row"><button class="btn ghost" type="button" data-action="close">Annuleren</button><button class="btn primary" type="button" data-action="submitpost">${ic("send")}Plaatsen</button></div>`, "modal");
+    setTimeout(() => $("#mtext", box).focus(), 40);
+  } else {
+    const box = openOverlay(`<h3>Verhaal schrijven</h3>
+      <label>Titel<input id="stitle" placeholder="Bijvoorbeeld: mijn overstap van helpdesk naar cloud"></label>
+      <label>Verhaal<textarea id="sbody" placeholder="Vertel wat je deed, wat je leerde en wat je anderen zou aanraden."></textarea></label>
+      <div class="row"><button class="btn ghost" type="button" data-action="close">Annuleren</button><button class="btn primary" type="button" data-action="submitstory">Publiceren</button></div>`, "modal");
+    setTimeout(() => $("#stitle", box).focus(), 40);
+  }
+}
+function openNominate() {
+  const box = openOverlay(`<h3>Draag iemand voor</h3><p class="muted">De coördinator beoordeelt de aanvraag en stuurt bij akkoord een uitnodiging.</p>
+    <label>Naam<input id="nname" placeholder="Voor- en achternaam"></label>
+    <label>E-mail<input id="nmail" type="email" placeholder="naam@voorbeeld.nl"></label>
+    <label>Waarom past deze persoon bij IN-IT?<textarea id="nwhy" style="min-height:80px"></textarea></label>
+    <div class="row"><button class="btn ghost" type="button" data-action="close">Annuleren</button><button class="btn primary" type="button" data-action="submitnom">Voordragen</button></div>`, "modal");
+  setTimeout(() => $("#nname", box).focus(), 40);
+}
+
+/* ── events ──────────────────────────────────── */
+document.addEventListener("click", (ev) => {
+  const a = ev.target.closest("[data-action]");
+  if (a) {
+    ev.preventDefault(); ev.stopPropagation();
+    const [act, x, y] = a.dataset.action.split(":");
+    const rest = a.dataset.action.slice(act.length + 1);
+    switch (act) {
+      case "close": closeOverlay(); break;
+      case "toast": closeOverlay(); toast(rest); break;
+      case "cmdk": openCmdk(); break;
+      case "create": openCreate(a); break;
+      case "notif": $("#belldot").hidden = true; openNotif(a); break;
+      case "menu": openMenu(a); break;
+      case "newpost": openModal("post"); break;
+      case "write": openModal("story"); break;
+      case "nominate": openNominate(); break;
+      case "join": toggleJoin(x); break;
+      case "rsvp": setRsvp(x, y); break;
+      case "post": post(x); break;
+      case "like": { S.liked.has(x) ? S.liked.delete(x) : S.liked.add(x); rerenderPost(x, y); break; }
+      case "replies": { S.openReplies.has(x) ? S.openReplies.delete(x) : S.openReplies.add(x); rerenderPost(x, y); setTimeout(() => $(`#rb-${x}`)?.focus(), 30); break; }
+      case "reply": {
+        const inp = $(`#rb-${x}`); const t = inp.value.trim(); if (!t) { inp.focus(); break; }
+        const p = findPost(x, y); p.replies.push({ who: ME, text: t, fresh: true }); rerenderPost(x, y); p.replies.at(-1).fresh = false; $(`#rb-${x}`)?.focus(); break;
+      }
+      case "submitpost": {
+        const slug = $("#mgroup").value, t = $("#mtext").value.trim();
+        if (!t) { $("#mtext").focus(); break; }
+        if (!S.joined.has(slug)) { S.joined.add(slug); completeStep("group"); renderMine(); }
+        (S.posts[slug] ||= []).unshift({ id: "p" + Date.now(), who: ME, time: "zojuist", text: t, likes: 0, replies: [] });
+        closeOverlay(); toast(`Geplaatst in ${group(slug).name}`); S.groupSub = "gesprek"; go("group:" + slug); break;
+      }
+      case "submitstory": {
+        const t = $("#stitle").value.trim(), b = $("#sbody").value.trim();
+        if (!t) { $("#stitle").focus(); break; }
+        S.stories.unshift({ id: "u" + Date.now(), title: t, who: ME, crop: ["c-wide", "c-lion", "c-bridge"][S.stories.length % 3], excerpt: b.slice(0, 180) || "Nog zonder tekst.", body: b, week: !stories().length });
+        closeOverlay(); toast("Verhaal gepubliceerd"); go("stories"); break;
+      }
+      case "submitnom": {
+        if (!$("#nname").value.trim()) { $("#nname").focus(); break; }
+        closeOverlay(); toast("Voordracht verstuurd naar de coördinator"); break;
+      }
+    }
+    return;
+  }
+  const s = ev.target.closest("[data-set]");
+  if (s) {
+    const [k, v] = s.dataset.set.split(":");
+    if (k === "device") { setDevice(v); return; }
+    if (k === "mode") { setMode(v); return; }
+    S[k] = v;
+    if (k === "memberFilter" || k === "memberView") {
+      $$(`[data-set^="${k}:"]`).forEach((b) => b.classList.toggle("on", b.dataset.set === `${k}:${v}`));
+      const q = S.memberQ.toLowerCase();
+      const list = members().filter((m) => (S.memberFilter === "alle" || m.open.includes(S.memberFilter)) && (!q || (m.name + " " + m.role).toLowerCase().includes(q)));
+      swapContent($("#mres"), memberResults(list));
+      return;
+    }
+    renderMain();
+    return;
+  }
+  const g = ev.target.closest("[data-go]");
+  if (g) {
+    ev.preventDefault();
+    const target = g.dataset.go;
+    const inOverlay = overlay && overlay.els.some((e) => e.contains(g));
+    if (inOverlay) closeOverlay();
+    if (target.startsWith("profile:")) S.profTab = "over";
+    if (target.startsWith("group:") && S.view !== "group") S.groupSub = "gesprek";
+    go(target, inOverlay ? null : g);
+  }
+});
+function swapContent(el, html) {
+  if (reduced()) { el.innerHTML = html; return; }
+  el.style.transition = "opacity .12s"; el.style.opacity = "0";
+  setTimeout(() => { el.innerHTML = html; el.style.opacity = "1"; }, 120);
+}
+document.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); overlay ? closeOverlay() : openCmdk(); }
+  else if (e.key === "Escape") closeOverlay();
+  else if (e.key === "Enter" && e.target.matches?.('[role="link"]')) e.target.click();
+  else if (e.key === "Enter" && e.target.id?.startsWith("rb-")) { const [, id] = e.target.id.split("rb-"); $(`[data-action^="reply:${id}:"]`)?.click(); }
+  else if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && e.target.id === "composer") $('[data-action^="post:"]')?.click();
+});
+document.addEventListener("input", (e) => {
+  if (e.target.id === "mq") {
+    S.memberQ = e.target.value; const q = S.memberQ.toLowerCase();
+    const list = members().filter((m) => (S.memberFilter === "alle" || m.open.includes(S.memberFilter)) && (!q || (m.name + " " + m.role).toLowerCase().includes(q)));
+    $("#mres").innerHTML = memberResults(list);
+  }
+});
+
+function placeSeg(seg, instant) {
+  const th = $(".thumb", seg), on = $('[aria-pressed="true"]', seg);
+  if (instant) th.style.transition = "none";
+  th.style.width = on.offsetWidth + "px"; th.style.transform = `translateX(${on.offsetLeft}px)`;
+  if (instant) { th.offsetHeight; th.style.transition = ""; }
+}
+function setSeg(name, v) {
+  const seg = $(`[data-seg="${name}"]`);
+  $$("button", seg).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.set === `${name}:${v}`)));
+  placeSeg(seg);
+}
+function setDevice(v) {
+  if (S.device === v) return;
+  S.device = v; setSeg("device", v); closeOverlay();
+  const app = $("#app");
+  if (reduced()) { $("#stage").classList.toggle("mobile", v === "mobile"); syncNav(true); return; }
+  app.classList.add("swap");
+  setTimeout(() => { $("#stage").classList.toggle("mobile", v === "mobile"); syncNav(true); app.classList.remove("swap"); }, 180);
+}
+function setMode(v) {
+  if (S.mode === v) return;
+  S.mode = v; setSeg("mode", v); closeOverlay();
+  $("#belldot").hidden = v !== "straks";
+  if (document.startViewTransition && !reduced()) document.startViewTransition(() => { renderMain(); renderNav(); });
+  else { renderMain(); renderNav(); }
+}
+
+/* start */
+renderNav(); renderMine(); renderMain();
+$$(".seg").forEach((s) => placeSeg(s, true));
+new ResizeObserver(() => syncNav(true)).observe($("#app"));
+document.fonts?.ready.then(() => { $$(".seg").forEach((s) => placeSeg(s, true)); syncNav(true); });
+})();
+</script>

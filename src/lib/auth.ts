@@ -5,7 +5,7 @@ import { getDb, hasDatabase } from "@/db";
 import { admins, linkedinAccounts } from "@/db/schema";
 import { getActiveInviteByCode, redeemInviteCode } from "@/lib/invites";
 
-function isBootstrapAdminEmail(email?: string | null) {
+export function isBootstrapAdminEmail(email?: string | null) {
   const allowed = process.env.BOOTSTRAP_ADMIN_EMAILS?.split(",").map((item) => item.trim().toLowerCase()) ?? [];
   return Boolean(email && allowed.includes(email.toLowerCase()));
 }
@@ -116,7 +116,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: "/join",
-    error: "/join",
+    signIn: "/inloggen",
+    error: "/inloggen",
   },
 };

@@ -1,131 +1,269 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Copy, KeyRound, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { copyText, untilLabel } from "@/components/admin/format";
+import { EmptyState } from "@/components/app/EmptyState";
+import { Panel } from "@/components/app/Panel";
+import { useToast } from "@/components/app/Toast";
+import { Layer } from "@/components/app/shell/Layer";
+import { Icon } from "@/components/ui/icon";
+import type { AdminInvite } from "@/lib/admin-data";
 
-type Invite = {
-  id: string;
-  code?: string;
-  email?: string | null;
-  note?: string | null;
-  status: string;
-  expires_at: string;
-  used_at?: string | null;
-  created_at?: string;
+const STATUS: Record<string, { cls: string; label: string }> = {
+  active: { cls: "ok", label: "Actief" },
+  used: { cls: "off", label: "Gebruikt" },
+  revoked: { cls: "off", label: "Ingetrokken" },
+  expired: { cls: "off", label: "Verlopen" },
 };
 
-export function InviteManagement() {
-  const [invites, setInvites] = useState<Invite[]>([]);
-  const [email, setEmail] = useState("");
-  const [note, setNote] = useState("");
-  const [freshCode, setFreshCode] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+const MASK = "INIT-••••••••";
+
+// Uitnodigingen: table of codes + "Nieuwe uitnodiging" modal. Only a hash of each code is
+// stored, so the real code is visible once, right after it is made.
+export function InviteManagement({ invites, openNew }: { invites: AdminInvite[]; openNew: boolean }) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [items, setItems] = useState(invites);
+  const [fresh, setFresh] = useState<string | null>(null);
+  const [open, setOpen] = useState(openNew);
+  const [seenOpenNew, setSeenOpenNew] = useState(openNew);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadInvites() {
-    const response = await fetch("/api/admin/invites");
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(body.error ?? "Could not load invites.");
-    setInvites(body.invites ?? []);
+  // The topbar button links to ?new=1; open the modal each time that flag appears.
+  if (openNew !== seenOpenNew) {
+    setSeenOpenNew(openNew);
+    if (openNew) setOpen(true);
   }
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      loadInvites()
-        .catch((err) => setError(err.message))
-        .finally(() => setLoading(false));
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
+    if (openNew) router.replace("/admin/invites", { scroll: false });
+  }, [openNew, router]);
 
-  async function createInvite() {
+  useEffect(() => {
+    if (!fresh) return;
+    const timer = window.setTimeout(() => setFresh(null), 600);
+    return () => window.clearTimeout(timer);
+  }, [fresh]);
+
+  async function revoke(id: string) {
+    setBusyId(id);
+    setError(null);
+    const response = await fetch("/api/admin/invites", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status: "revoked" }),
+    });
+    setBusyId(null);
+    if (!response.ok) {
+      setError("Intrekken lukte niet. Probeer het opnieuw.");
+      return;
+    }
+    setItems((current) => current.map((i) => (i.id === id ? { ...i, status: "revoked" } : i)));
+    setFresh(id);
+    toast("Code ingetrokken");
+    router.refresh();
+  }
+
+  return (
+    <div className="page">
+      <div className="hello">
+        <div>
+          <h1>Uitnodigingen</h1>
+          <p>Codes zijn 24 uur geldig en werken één keer. Alleen voor de eerste aanmelding.</p>
+        </div>
+        <button className="btn primary" type="button" onClick={() => setOpen(true)}>
+          <Icon name="plus" />
+          Nieuwe uitnodiging
+        </button>
+      </div>
+
+      {error ? (
+        <p role="alert" style={{ color: "var(--accent)", fontSize: 14 }}>
+          {error}
+        </p>
+      ) : null}
+
+      <Panel>
+        {items.length ? (
+          <>
+            <div className="tbl-wrap">
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Status</th>
+                    <th>Geldig tot</th>
+                    <th>Door</th>
+                    <th>Notitie</th>
+                    <th>
+                      <span className="sr-only-x">Acties</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((invite) => {
+                    const st = STATUS[invite.status] ?? { cls: "off", label: invite.status };
+                    return (
+                      <tr key={invite.id} className={fresh === invite.id ? "fresh" : undefined}>
+                        <td className="code">{MASK}</td>
+                        <td>
+                          <span className={`st ${st.cls}`}>{st.label}</span>
+                        </td>
+                        <td className="num">{untilLabel(invite.expires_at)}</td>
+                        <td>{invite.created_by ?? "Onbekend"}</td>
+                        <td className="muted">
+                          {[invite.email ? `Voor ${invite.email}` : null, invite.note].filter(Boolean).join(" · ") || "Zonder notitie"}
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          {invite.status === "active" ? (
+                            <button className="link" type="button" disabled={busyId === invite.id} onClick={() => revoke(invite.id)}>
+                              Intrekken
+                            </button>
+                          ) : null}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>
+              Een code is alleen direct na het maken te zien. Daarna bewaren we hem versleuteld, dus hier staat hij afgeschermd.
+            </p>
+          </>
+        ) : (
+          <EmptyState compact icon="key" text="Nog geen codes. Maak er een met Nieuwe uitnodiging." />
+        )}
+      </Panel>
+
+      <NewInviteModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onCreated={(invite) => {
+          setItems((current) => [invite, ...current]);
+          setFresh(invite.id);
+          router.refresh();
+        }}
+      />
+    </div>
+  );
+}
+
+function NewInviteModal({
+  open,
+  onClose,
+  onCreated,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onCreated: (invite: AdminInvite) => void;
+}) {
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [note, setNote] = useState("");
+  const [code, setCode] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const codeRef = useRef<HTMLSpanElement>(null);
+
+  function close() {
+    onClose();
+    // Clear after the exit transition so the code does not flash away mid-animation.
+    window.setTimeout(() => {
+      setEmail("");
+      setNote("");
+      setCode(null);
+      setError(null);
+    }, 240);
+  }
+
+  async function create() {
     setSaving(true);
     setError(null);
     const response = await fetch("/api/admin/invites", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, note }),
+      body: JSON.stringify({ email: email.trim(), note: note.trim() }),
     });
     const body = await response.json().catch(() => ({}));
     setSaving(false);
     if (!response.ok) {
-      setError(body.error ?? "Could not create invite.");
+      setError(email.trim() ? "Controleer het e-mailadres en probeer het opnieuw." : "De code maken lukte niet. Probeer het opnieuw.");
       return;
     }
-    setFreshCode(body.invite.code);
-    setEmail("");
-    setNote("");
-    await loadInvites();
-  }
-
-  async function revokeInvite(id: string) {
-    await fetch("/api/admin/invites", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: "revoked" }),
+    setCode(body.invite.code);
+    onCreated({
+      id: body.invite.id,
+      email: body.invite.email ?? null,
+      note: body.invite.note ?? null,
+      status: "active",
+      expires_at: body.invite.expires_at,
+      used_at: null,
+      created_at: new Date().toISOString(),
+      created_by: "Jij",
     });
-    await loadInvites();
   }
 
-  if (loading) return <LoadingSkeleton className="h-72" />;
+  async function copy() {
+    if (!code) return;
+    const ok = await copyText(code, codeRef.current);
+    toast(ok ? "Code gekopieerd" : "Selecteer de code en kopieer hem zelf");
+  }
 
   return (
-    <div className="grid gap-6">
-      <div className="rounded-[2rem] border border-charcoal/10 bg-white/78 p-6 shadow-sm">
-        <div className="flex items-start gap-4">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-deep-blue text-white">
-            <KeyRound className="h-5 w-5" />
-          </span>
-          <div>
-            <h2 className="text-2xl font-black text-charcoal">Create 24-hour invite</h2>
-            <p className="mt-2 text-sm leading-6 text-charcoal/62">
-              Codes are shown once, expire after 24 hours and unlock LinkedIn sign-in only for the invitee.
-            </p>
-          </div>
-        </div>
-        <div className="mt-6 grid gap-3 md:grid-cols-[1fr_1.4fr_auto]">
-          <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Optional email lock" />
-          <Input value={note} onChange={(event) => setNote(event.target.value)} placeholder="Internal admin note" />
-          <Button onClick={createInvite} disabled={saving}>
-            {saving ? "Creating..." : "Create invite"}
-          </Button>
-        </div>
-        {freshCode ? (
-          <div className="mt-5 flex flex-wrap items-center gap-3 rounded-3xl bg-sand/45 p-4">
-            <p className="font-mono text-lg font-black text-charcoal">{freshCode}</p>
-            <Button type="button" variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(freshCode)}>
-              <Copy className="h-4 w-4" />
-              Copy
-            </Button>
-            <p className="text-sm font-semibold text-charcoal/58">Share this privately. It will not be shown again.</p>
-          </div>
+    <Layer open={open} kind="modal" onClose={close} label="Nieuwe uitnodiging">
+      <h3>Nieuwe uitnodiging</h3>
+      <p className="muted">
+        {code
+          ? "Deel deze code met de persoon die je uitnodigt. Hij werkt één keer, is 24 uur geldig en je ziet hem hier maar één keer."
+          : "Maak een code voor iemand die je kent. Hij werkt één keer en is 24 uur geldig."}
+      </p>
+      <div className="bigcode">
+        <span className="code" ref={codeRef} aria-live="polite" style={code ? undefined : { color: "var(--muted)" }}>
+          {code ?? MASK}
+        </span>
+        {code ? (
+          <button className="btn ghost sm" type="button" onClick={copy} data-autofocus>
+            <Icon name="copy" />
+            Kopieer
+          </button>
         ) : null}
-        {error ? <p className="mt-4 text-sm font-semibold text-date">{error}</p> : null}
       </div>
-
-      <div className="overflow-hidden rounded-[2rem] border border-charcoal/10 bg-white/78 shadow-sm">
-        <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 border-b border-charcoal/10 px-5 py-4 text-xs font-black uppercase tracking-[0.14em] text-charcoal/50">
-          <span>Email</span>
-          <span>Status</span>
-          <span>Expires</span>
-          <span>Action</span>
-        </div>
-        {invites.map((invite) => (
-          <div key={invite.id} className="grid grid-cols-[1fr_1fr_1fr_auto] items-center gap-4 border-b border-charcoal/8 px-5 py-4 text-sm">
-            <span className="font-semibold text-charcoal">{invite.email || "Any invited contact"}</span>
-            <span className="font-bold capitalize text-charcoal/70">{invite.status}</span>
-            <span className="text-charcoal/58">{new Date(invite.expires_at).toLocaleString("nl-NL")}</span>
-            <Button type="button" variant="ghost" size="sm" disabled={invite.status !== "active"} onClick={() => revokeInvite(invite.id)}>
-              <RotateCcw className="h-4 w-4" />
-              Revoke
-            </Button>
-          </div>
-        ))}
+      {code ? null : (
+        <>
+          <label>
+            Alleen geldig voor dit e-mailadres (optioneel)
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="naam@voorbeeld.nl" />
+          </label>
+          <label>
+            Notitie voor jezelf
+            <input value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} placeholder="Bijvoorbeeld: collega van Ashraf" data-autofocus />
+          </label>
+        </>
+      )}
+      {error ? (
+        <p role="alert" style={{ color: "var(--accent)", fontSize: 13 }}>
+          {error}
+        </p>
+      ) : null}
+      <div className="row">
+        {code ? (
+          <button className="btn primary" type="button" onClick={close}>
+            Klaar
+          </button>
+        ) : (
+          <>
+            <button className="btn ghost" type="button" onClick={close}>
+              Annuleren
+            </button>
+            <button className="btn primary" type="button" onClick={create} disabled={saving}>
+              {saving ? "Bezig..." : "Code maken"}
+            </button>
+          </>
+        )}
       </div>
-    </div>
+    </Layer>
   );
 }

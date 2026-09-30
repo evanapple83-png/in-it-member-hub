@@ -1,10 +1,19 @@
-import { AdminClient } from "@/components/admin/AdminClient";
-import { PageShell } from "@/components/layout/PageShell";
+import Link from "next/link";
+import { CsvImport } from "@/components/admin/CsvImport";
 
 export default function AdminImportPage() {
   return (
-    <PageShell eyebrow="Admin" title="CSV import fallback" description="CSV import is admin-only and never publishes profiles directly.">
-      <AdminClient view="import" />
-    </PageShell>
+    <div className="page">
+      <div className="hello">
+        <div>
+          <h1>Leden importeren</h1>
+          <p>Voor wie niet via LinkedIn binnenkomt. Geïmporteerde leden wachten altijd eerst op goedkeuring.</p>
+        </div>
+        <Link className="btn ghost" href="/admin/members">
+          Terug naar leden
+        </Link>
+      </div>
+      <CsvImport />
+    </div>
   );
 }

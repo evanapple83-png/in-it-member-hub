@@ -27,6 +27,8 @@ const memberPatchSchema = z
     open_to_collaborate: z.boolean().optional(),
     open_to_speaking: z.boolean().optional(),
     consent_given: z.boolean().optional(),
+    // Optional note shown to the applicant on /wachten when rejected.
+    rejection_reason: z.string().max(500).nullable().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, "No changes provided.");
 
@@ -60,6 +62,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       ...(changes.open_to_collaborate !== undefined ? { openToCollaborate: changes.open_to_collaborate } : {}),
       ...(changes.open_to_speaking !== undefined ? { openToSpeaking: changes.open_to_speaking } : {}),
       ...(changes.consent_given !== undefined ? { consentGiven: changes.consent_given } : {}),
+      // Approving clears an earlier rejection note; rejecting stores the (optional) note.
+      ...(changes.visibility_status === "approved"
+        ? { rejectionReason: null }
+        : changes.visibility_status === "rejected"
+          ? { rejectionReason: changes.rejection_reason?.trim() || null }
+          : changes.rejection_reason !== undefined
+            ? { rejectionReason: changes.rejection_reason?.trim() || null }
+            : {}),
       updatedAt: new Date(),
     })
     .where(eq(members.id, id))

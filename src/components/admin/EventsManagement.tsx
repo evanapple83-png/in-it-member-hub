@@ -1,11 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { CalendarDays, Eye, EyeOff, Plus, ShieldAlert, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input, Textarea } from "@/components/ui/input";
-import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
+import { EmptyState } from "@/components/app/EmptyState";
+import { Panel } from "@/components/app/Panel";
+import { useToast } from "@/components/app/Toast";
+import { Layer } from "@/components/app/shell/Layer";
+import { Icon } from "@/components/ui/icon";
 import type { CommunityEvent } from "@/lib/types";
 
 type Draft = {
@@ -34,48 +35,196 @@ function toIso(localValue: string) {
   return localValue ? new Date(localValue).toISOString() : "";
 }
 
-export function EventsManagement() {
-  const { status: sessionStatus } = useSession();
-  const [events, setEvents] = useState<CommunityEvent[]>([]);
-  const [state, setState] = useState<"loading" | "ready" | "unauthorized">("loading");
-  const [error, setError] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Draft>(emptyDraft);
-  const [notify, setNotify] = useState(true);
-  const [saving, setSaving] = useState(false);
+function dateLabel(iso: string) {
+  return new Date(iso).toLocaleString("nl-NL", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
 
-  async function load() {
-    const response = await fetch("/api/admin/events");
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      setState("unauthorized");
-      setError(body.error ?? "Niet geautoriseerd.");
-      return;
-    }
-    setEvents(body.events ?? []);
-    setState("ready");
+function statusOf(event: CommunityEvent, now: number) {
+  const end = new Date(event.ends_at ?? event.starts_at).getTime();
+  if (end < now) return { cls: "off", label: "Afgelopen" };
+  return event.status === "published" ? { cls: "ok", label: "Gepubliceerd" } : { cls: "wait", label: "Concept" };
+}
+
+// Activiteiten: table with publish/unpublish/delete per row, and a modal to create a new one
+// (always as concept first; publishing can mail the members).
+export function EventsManagement({ events }: { events: CommunityEvent[] }) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [items, setItems] = useState(events);
+  const [seen, setSeen] = useState(events);
+  const [notify, setNotify] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [fresh, setFresh] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [now] = useState(() => Date.now());
+
+  if (events !== seen) {
+    setSeen(events);
+    setItems(events);
   }
 
   useEffect(() => {
-    if (sessionStatus === "loading") return;
-    async function init() {
-      if (sessionStatus !== "authenticated") {
-        setState("unauthorized");
-        setError("Log in als coordinator om activiteiten te beheren.");
-        return;
-      }
-      try {
-        await load();
-      } catch {
-        setState("unauthorized");
-        setError("Activiteitenbeheer is beveiligd. Log in als coordinator om verder te gaan.");
-      }
+    if (!fresh) return;
+    const timer = window.setTimeout(() => setFresh(null), 600);
+    return () => window.clearTimeout(timer);
+  }, [fresh]);
+
+  const upcoming = items.filter((e) => new Date(e.ends_at ?? e.starts_at).getTime() >= now).length;
+
+  async function mutate(event: CommunityEvent, payload: Record<string, unknown> | null, done: string) {
+    setBusyId(event.id);
+    setError(null);
+    const response = await fetch(`/api/admin/events/${event.id}`, {
+      method: payload ? "PATCH" : "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: payload ? JSON.stringify(payload) : undefined,
+    });
+    const body = await response.json().catch(() => ({}));
+    setBusyId(null);
+    setConfirmId(null);
+    if (!response.ok) {
+      setError(body.error ?? "Dat lukte niet. Probeer het opnieuw.");
+      return;
     }
-    void init();
-  }, [sessionStatus]);
+    if (!payload) setItems((current) => current.filter((e) => e.id !== event.id));
+    else if (body.event) {
+      setItems((current) => current.map((e) => (e.id === event.id ? body.event : e)));
+      setFresh(event.id);
+    }
+    const mailed = typeof body.notified === "number" && body.notified > 0 ? ` en naar ${body.notified} leden gemaild` : "";
+    toast(done + mailed);
+    router.refresh();
+  }
+
+  return (
+    <div className="page">
+      <div className="hello">
+        <div>
+          <h1>Activiteiten</h1>
+          <p>
+            {items.length === 0
+              ? "Nog geen activiteiten. De agenda van de community is leeg."
+              : upcoming === 0
+                ? "Alles staat in het verleden. De agenda van de community is nu leeg."
+                : `${upcoming} ${upcoming === 1 ? "activiteit staat" : "activiteiten staan"} nog op de agenda.`}
+          </p>
+        </div>
+        <button className="btn primary" type="button" onClick={() => setOpen(true)}>
+          <Icon name="plus" />
+          Nieuwe activiteit
+        </button>
+      </div>
+
+      {error ? (
+        <p role="alert" style={{ color: "var(--accent)", fontSize: 14 }}>
+          {error}
+        </p>
+      ) : null}
+
+      <Panel
+        action={
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13.5 }}>
+            <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
+            Leden mailen bij publiceren
+          </label>
+        }
+      >
+        {items.length ? (
+          <div className="tbl-wrap">
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>Activiteit</th>
+                  <th>Datum</th>
+                  <th>Status</th>
+                  <th>
+                    <span className="sr-only-x">Acties</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((event) => {
+                  const st = statusOf(event, now);
+                  const busy = busyId === event.id;
+                  return (
+                    <tr key={event.id} className={fresh === event.id ? "fresh" : undefined}>
+                      <td>
+                        <b style={{ fontWeight: 500, display: "block" }}>{event.title}</b>
+                        {event.location ? <small className="muted">{event.location}</small> : null}
+                      </td>
+                      <td className="num">{dateLabel(event.starts_at)}</td>
+                      <td>
+                        <span className={`st ${st.cls}`}>{st.label}</span>
+                      </td>
+                      <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                        <span style={{ display: "inline-flex", gap: 6 }}>
+                          {event.status === "published" ? (
+                            <button className="link" type="button" disabled={busy} onClick={() => mutate(event, { action: "unpublish" }, "Activiteit teruggezet naar concept")}>
+                              Depubliceren
+                            </button>
+                          ) : (
+                            <button className="link" type="button" disabled={busy} onClick={() => mutate(event, { action: "publish", notify }, "Activiteit gepubliceerd")}>
+                              Publiceren
+                            </button>
+                          )}
+                          <button
+                            className="link"
+                            type="button"
+                            disabled={busy}
+                            style={{ color: "var(--accent)" }}
+                            onClick={() => (confirmId === event.id ? mutate(event, null, "Activiteit verwijderd") : setConfirmId(event.id))}
+                          >
+                            {confirmId === event.id ? "Zeker weten?" : "Verwijderen"}
+                          </button>
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState compact icon="cal" text="Nog geen activiteiten. Maak er een met Nieuwe activiteit." />
+        )}
+      </Panel>
+
+      <NewEventModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onCreated={(event) => {
+          setItems((current) => [event, ...current]);
+          setFresh(event.id);
+          setOpen(false);
+          toast("Opgeslagen als concept. Publiceer hem om hem zichtbaar te maken");
+          router.refresh();
+        }}
+      />
+    </div>
+  );
+}
+
+function NewEventModal({
+  open,
+  onClose,
+  onCreated,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onCreated: (event: CommunityEvent) => void;
+}) {
+  const [draft, setDraft] = useState<Draft>(emptyDraft);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const set = (key: keyof Draft) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setDraft((d) => ({ ...d, [key]: e.target.value }));
 
   async function create() {
-    if (!draft.title || !draft.starts_at) {
-      setError("Titel en startdatum zijn verplicht.");
+    if (!draft.title.trim() || !draft.starts_at) {
+      setError("Titel en start zijn verplicht.");
       return;
     }
     setSaving(true);
@@ -84,150 +233,75 @@ export function EventsManagement() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        title: draft.title,
+        title: draft.title.trim(),
         description: draft.description,
         location: draft.location,
         starts_at: toIso(draft.starts_at),
         ends_at: toIso(draft.ends_at),
         category: draft.category,
-        meet_link: draft.meet_link,
-        calendar_link: draft.calendar_link,
+        meet_link: draft.meet_link.trim(),
+        calendar_link: draft.calendar_link.trim(),
       }),
     });
     const body = await response.json().catch(() => ({}));
     setSaving(false);
-    if (!response.ok) {
-      setError(body.error ?? "Aanmaken mislukt.");
+    if (!response.ok || !body.event) {
+      setError(body.error ?? "Aanmaken lukte niet. Controleer de links en datums.");
       return;
     }
     setDraft(emptyDraft);
-    await load();
-  }
-
-  async function mutate(id: string, payload: Record<string, unknown>, method: "PATCH" | "DELETE" = "PATCH") {
-    const response = await fetch(`/api/admin/events/${id}`, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: method === "DELETE" ? undefined : JSON.stringify(payload),
-    });
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
-      setError(body.error ?? "Actie mislukt.");
-      return;
-    }
-    await load();
-  }
-
-  if (state === "loading") return <LoadingSkeleton className="h-72" />;
-
-  if (state === "unauthorized") {
-    return (
-      <div className="rounded-[2rem] border border-date/15 bg-white/78 p-8 shadow-sm">
-        <ShieldAlert className="h-10 w-10 text-date" />
-        <h2 className="mt-4 text-2xl font-black text-charcoal">Activiteitenbeheer beveiligd</h2>
-        <p className="mt-3 max-w-2xl leading-7 text-charcoal/66">{error}</p>
-      </div>
-    );
+    onCreated(body.event);
   }
 
   return (
-    <div className="grid gap-6">
-      <div className="rounded-[2rem] border border-charcoal/10 bg-white/82 p-6 shadow-sm">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-deep-blue text-white">
-            <Plus className="h-5 w-5" />
-          </span>
-          <h2 className="text-2xl font-black text-charcoal">Nieuwe activiteit</h2>
-        </div>
-        <div className="mt-5 grid gap-4">
-          <Field label="Titel *" value={draft.title} onChange={(value) => setDraft({ ...draft, title: value })} />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Start *" type="datetime-local" value={draft.starts_at} onChange={(value) => setDraft({ ...draft, starts_at: value })} />
-            <Field label="Einde" type="datetime-local" value={draft.ends_at} onChange={(value) => setDraft({ ...draft, ends_at: value })} />
-          </div>
-          <Field label="Locatie" value={draft.location} onChange={(value) => setDraft({ ...draft, location: value })} />
-          <label className="grid gap-1.5 text-sm font-bold text-charcoal">
-            Omschrijving
-            <Textarea value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} />
-          </label>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Google Meet-link" value={draft.meet_link} onChange={(value) => setDraft({ ...draft, meet_link: value })} placeholder="https://meet.google.com/..." />
-            <Field label="Google Agenda-link" value={draft.calendar_link} onChange={(value) => setDraft({ ...draft, calendar_link: value })} placeholder="https://calendar.google.com/..." />
-          </div>
-          {error ? <p className="text-sm font-semibold text-date">{error}</p> : null}
-          <div className="flex items-center gap-3">
-            <Button onClick={create} disabled={saving}>
-              {saving ? "Opslaan..." : "Activiteit aanmaken (concept)"}
-            </Button>
-            <p className="text-xs text-charcoal/50">Aangemaakt als concept. Publiceer hieronder om zichtbaar te maken.</p>
-          </div>
-        </div>
-      </div>
-
-      <label className="flex w-fit items-center gap-3 rounded-2xl bg-sand/35 px-4 py-2.5 text-sm font-bold text-charcoal">
-        <input type="checkbox" checked={notify} onChange={(event) => setNotify(event.target.checked)} />
-        E-mailnotificatie sturen bij publiceren (FR-026)
+    <Layer open={open} kind="modal" onClose={onClose} label="Nieuwe activiteit" style={{ maxHeight: "calc(100% - 40px)", overflowY: "auto" }}>
+      <h3>Nieuwe activiteit</h3>
+      <p className="muted">Wordt eerst opgeslagen als concept. Leden zien hem pas na publiceren.</p>
+      <label>
+        Titel
+        <input value={draft.title} onChange={set("title")} maxLength={160} data-autofocus />
       </label>
-
-      <div className="grid gap-3">
-        {events.map((event) => (
-          <div key={event.id} className="rounded-3xl border border-charcoal/10 bg-white/82 p-5 shadow-sm">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-black text-charcoal">{event.title}</h3>
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${event.status === "published" ? "bg-deep-blue/10 text-deep-blue" : "bg-charcoal/8 text-charcoal/60"}`}>
-                    {event.status === "published" ? "Gepubliceerd" : "Concept"}
-                  </span>
-                </div>
-                <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-charcoal/60">
-                  <CalendarDays className="h-4 w-4" />
-                  {new Date(event.starts_at).toLocaleString("nl-NL", { dateStyle: "medium", timeStyle: "short" })}
-                  {event.location ? ` · ${event.location}` : ""}
-                </p>
-              </div>
-              <div className="flex shrink-0 gap-2">
-                {event.status === "published" ? (
-                  <Button size="sm" variant="outline" onClick={() => mutate(event.id, { action: "unpublish" })}>
-                    <EyeOff className="h-4 w-4" />
-                    Depubliceren
-                  </Button>
-                ) : (
-                  <Button size="sm" onClick={() => mutate(event.id, { action: "publish", notify })}>
-                    <Eye className="h-4 w-4" />
-                    Publiceren
-                  </Button>
-                )}
-                <Button size="icon" variant="danger" onClick={() => mutate(event.id, {}, "DELETE")} aria-label="Verwijderen">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
-        {events.length === 0 ? <p className="text-sm font-semibold text-charcoal/55">Nog geen activiteiten aangemaakt.</p> : null}
+      <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+        <label>
+          Start
+          <input type="datetime-local" value={draft.starts_at} onChange={set("starts_at")} />
+        </label>
+        <label>
+          Einde (optioneel)
+          <input type="datetime-local" value={draft.ends_at} onChange={set("ends_at")} />
+        </label>
       </div>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  type = "text",
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: string;
-  placeholder?: string;
-}) {
-  return (
-    <label className="grid gap-1.5 text-sm font-bold text-charcoal">
-      {label}
-      <Input type={type} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
-    </label>
+      <label>
+        Locatie
+        <input value={draft.location} onChange={set("location")} maxLength={200} />
+      </label>
+      <label>
+        Omschrijving
+        <textarea value={draft.description} onChange={set("description")} maxLength={4000} />
+      </label>
+      <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+        <label>
+          Google Meet-link
+          <input value={draft.meet_link} onChange={set("meet_link")} placeholder="https://meet.google.com/..." />
+        </label>
+        <label>
+          Google Agenda-link
+          <input value={draft.calendar_link} onChange={set("calendar_link")} placeholder="https://calendar.google.com/..." />
+        </label>
+      </div>
+      {error ? (
+        <p role="alert" style={{ color: "var(--accent)", fontSize: 13 }}>
+          {error}
+        </p>
+      ) : null}
+      <div className="row">
+        <button className="btn ghost" type="button" onClick={onClose}>
+          Annuleren
+        </button>
+        <button className="btn primary" type="button" onClick={create} disabled={saving}>
+          {saving ? "Opslaan..." : "Opslaan als concept"}
+        </button>
+      </div>
+    </Layer>
   );
 }

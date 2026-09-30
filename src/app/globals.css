@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./app.css";
 
 :root {
   --background: #fbf8f2;
@@ -11,6 +12,23 @@
   --dutch-blue: #6ea7d8;
   --charcoal: #17202a;
   --off-white: #fbf8f2;
+
+  /* Redesign tokens (docs/redesign/spec/base.css). The spec gold is set on .ui only. */
+  --backdrop: #b9bed0;
+  --card: #ffffff;
+  --canvas: #f5f5f7;
+  --line: #ebebef;
+  --line-strong: #dcdce3;
+  --ink: #1d2130;
+  --muted: #5f6474;
+  --accent: #c2412a;
+  --accent-soft: #fbece8;
+  --navy: #1f2638;
+  --ok: #2f7a4f;
+  --ok-soft: #e6f2ea;
+  --font: var(--font-outfit), "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --hero: url("/in-it-hero-background.png");
 }
 
 @theme inline {
@@ -24,6 +42,18 @@
   --color-dutch-blue: var(--dutch-blue);
   --color-charcoal: var(--charcoal);
   --color-off-white: var(--off-white);
+  --color-card: var(--card);
+  --color-canvas: var(--canvas);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-navy: var(--navy);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --font-outfit: var(--font-outfit);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

@@ -27,6 +27,7 @@ export function memberFromRow(row: MemberRow): Member {
     email_opt_out: row.emailOptOut,
     visibility_status: row.visibilityStatus as Member["visibility_status"],
     consent_given: row.consentGiven,
+    rejection_reason: row.rejectionReason ?? null,
     onboarding_completed: row.onboardingCompleted,
     auth_provider: row.authProvider,
     created_at: row.createdAt.toISOString(),

@@ -1,10 +1,21 @@
-import { AdminClient } from "@/components/admin/AdminClient";
-import { PageShell } from "@/components/layout/PageShell";
+import Link from "next/link";
+import { MemberManagementTable } from "@/components/admin/MemberManagementTable";
+import { listMembersForAdmin } from "@/lib/admin-data";
 
-export default function AdminMembersPage() {
+export default async function AdminMembersPage() {
+  const members = await listMembersForAdmin();
   return (
-    <PageShell eyebrow="Admin" title="All members" description="Approve, reject, hide, edit or delete member records.">
-      <AdminClient view="members" />
-    </PageShell>
+    <div className="page">
+      <div className="hello">
+        <div>
+          <h1>Leden</h1>
+          <p>Status, rol en zichtbaarheid per lid.</p>
+        </div>
+        <Link className="btn ghost" href="/admin/import">
+          Leden importeren
+        </Link>
+      </div>
+      <MemberManagementTable members={members} />
+    </div>
   );
 }

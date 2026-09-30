@@ -1,14 +1,17 @@
-import { AdminClient } from "@/components/admin/AdminClient";
-import { PageShell } from "@/components/layout/PageShell";
+import { ReviewQueue } from "@/components/admin/ReviewQueue";
+import { getReviewQueue } from "@/lib/admin-data";
 
-export default function AdminRequestsPage() {
+export default async function AdminRequestsPage() {
+  const { pendingMembers, openRequests } = await getReviewQueue();
   return (
-    <PageShell
-      eyebrow="Admin"
-      title="Toegangsaanvragen"
-      description="Beoordeel en registreer toegangsaanvragen. Goedkeuren verstuurt automatisch een eenmalige activeringscode."
-    >
-      <AdminClient view="requests" />
-    </PageShell>
+    <div className="page">
+      <div className="hello">
+        <div>
+          <h1>Aanvragen</h1>
+          <p>Nieuwe accounts en toegangsaanvragen, op één plek.</p>
+        </div>
+      </div>
+      <ReviewQueue pendingMembers={pendingMembers} openRequests={openRequests} variant="requests" />
+    </div>
   );
 }

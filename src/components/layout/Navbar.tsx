@@ -2,7 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { getServerSession } from "next-auth";
 import { eq } from "drizzle-orm";
-import { KeyRound, Link2, Menu, Sparkles } from "lucide-react";
+import { KeyRound, Link2, Sparkles } from "lucide-react";
+import { MobileNav } from "@/components/layout/MobileNav";
 import { Button } from "@/components/ui/button";
 import { authOptions } from "@/lib/auth";
 import { getApprovedCurrentMember } from "@/lib/access";
@@ -71,21 +72,23 @@ export async function Navbar() {
         </div>
         <div className="hidden items-center gap-2 rounded-full border border-white/55 bg-white/48 p-1.5 shadow-[0_18px_60px_rgba(16,54,92,0.12)] ring-1 ring-charcoal/5 backdrop-blur-2xl md:flex">
           <Button asChild variant="ghost" size="sm" className="bg-white/40 hover:bg-white/72">
-            <Link href={approvedMember ? "/profile" : "/join"}>
+            <Link href={approvedMember ? "/profile" : "/inloggen"}>
               {approvedMember ? <Link2 className="h-4 w-4" /> : <KeyRound className="h-4 w-4" />}
               {approvedMember ? "Profile" : "Sign in"}
             </Link>
           </Button>
           <Button asChild size="sm">
-            <Link href={approvedMember ? "/members" : "/join"}>
+            <Link href={approvedMember ? "/vandaag" : "/join"}>
               <Sparkles className="h-4 w-4" />
               {approvedMember ? "Explore" : "Use invite"}
             </Link>
           </Button>
         </div>
-        <Button className="bg-white/58 shadow-[0_18px_60px_rgba(16,54,92,0.12)] backdrop-blur-2xl md:hidden" variant="outline" size="icon" aria-label="Open navigation">
-          <Menu className="h-5 w-5" />
-        </Button>
+        <MobileNav
+          items={navItems}
+          secondary={approvedMember ? { href: "/profile", label: "Profile" } : { href: "/inloggen", label: "Sign in" }}
+          primary={approvedMember ? { href: "/vandaag", label: "Explore" } : { href: "/join", label: "Use invite" }}
+        />
       </nav>
     </header>
   );

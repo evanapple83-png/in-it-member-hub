@@ -30,6 +30,8 @@ export const members = pgTable("members", {
   // 'pending' (aangevraagd) | 'approved'/'active' (goedgekeurd/actief) | 'hidden' | 'rejected' | 'deactivated' (gedeactiveerd) — FR-019
   visibilityStatus: text("visibility_status").default("pending").notNull(),
   consentGiven: boolean("consent_given").default(false).notNull(),
+  // Optional note from the coordinator when an application is declined; shown on /wachten.
+  rejectionReason: text("rejection_reason"),
   onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
   authProvider: text("auth_provider").default("linkedin").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -103,6 +105,8 @@ export const communities = pgTable(
     description: text("description"),
     category: text("category").default("professional").notNull(),
     isPrivate: boolean("is_private").default(true).notNull(),
+    // Optional uploaded cover (Vercel Blob URL); null falls back to a crop of the hero image.
+    coverImageUrl: text("cover_image_url"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },

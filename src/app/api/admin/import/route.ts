@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   const admin = await requireAdminFromRequest();
   if (!admin.ok) return NextResponse.json({ error: admin.error }, { status: admin.status });
   const payload = requestSchema.safeParse(await request.json());
-  if (!payload.success) return NextResponse.json({ error: "Invalid CSV payload." }, { status: 400 });
+  if (!payload.success) return NextResponse.json({ error: "Het bestand kon niet worden gelezen." }, { status: 400 });
 
   const errors: string[] = [];
   let inserted = 0;
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   for (const [index, row] of payload.data.rows.entries()) {
     const parsed = csvRowSchema.safeParse(row);
     if (!parsed.success) {
-      errors.push(`Row ${index + 1}: missing or invalid required fields.`);
+      errors.push(`Rij ${index + 1}: naam of e-mail ontbreekt of klopt niet.`);
       continue;
     }
     const duplicateConditions = parsed.data.linkedin_url
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       : eq(members.email, parsed.data.email);
     const [existing] = await admin.db.select({ id: members.id }).from(members).where(duplicateConditions).limit(1);
     if (existing) {
-      errors.push(`Row ${index + 1}: duplicate email or LinkedIn URL.`);
+      errors.push(`Rij ${index + 1}: dit e-mailadres of LinkedIn-profiel bestaat al.`);
       continue;
     }
     const bool = (value: string) => ["true", "1", "yes", "ja"].includes(value.toLowerCase());
@@ -74,8 +74,8 @@ export async function POST(request: Request) {
       consentGiven: false,
     });
       inserted += 1;
-    } catch (error) {
-      errors.push(`Row ${index + 1}: ${error instanceof Error ? error.message : "Import failed."}`);
+    } catch {
+      errors.push(`Rij ${index + 1}: importeren lukte niet.`);
     }
   }
 
