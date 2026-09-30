@@ -3,8 +3,11 @@ import { ReviewQueue } from "@/components/admin/ReviewQueue";
 import { agoLabel, untilLabel } from "@/components/admin/format";
 import { Panel } from "@/components/app/Panel";
 import { getAdminOverview } from "@/lib/admin-data";
+import { requireAdminAccess } from "@/lib/access-state";
 
 export default async function AdminOverviewPage() {
+  // Every admin page checks for itself: the layout gate alone can be skipped on partial renders.
+  await requireAdminAccess();
   const data = await getAdminOverview();
   const waiting = data.pendingMembers.length + data.openRequests.length;
   const now = data.generatedAt;

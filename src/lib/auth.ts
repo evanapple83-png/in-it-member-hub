@@ -11,7 +11,10 @@ export function isBootstrapAdminEmail(email?: string | null) {
 }
 
 export const authOptions: NextAuthOptions = {
-  session: { strategy: "jwt" },
+  secret: process.env.NEXTAUTH_SECRET,
+  // A week, refreshed daily while in use. Access itself is re-checked against the database on
+  // every request (access-state.ts), so this only bounds how long a stolen cookie stays useful.
+  session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 7, updateAge: 60 * 60 * 24 },
   providers: [
     {
       id: "linkedin",
@@ -40,7 +43,9 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, profile }) {
       if (!hasDatabase()) return true;
 
-      const linkedinProfile = profile as { sub?: string; email?: string; name?: string; picture?: string } | undefined;
+      const linkedinProfile = profile as
+        | { sub?: string; email?: string; email_verified?: boolean | string; name?: string; picture?: string }
+        | undefined;
       const linkedinSub = linkedinProfile?.sub ?? user.id;
       const email = linkedinProfile?.email ?? user.email;
       if (!linkedinSub) return false;
@@ -49,7 +54,8 @@ export const authOptions: NextAuthOptions = {
 
       // Emails in BOOTSTRAP_ADMIN_EMAILS get in without an invite AND hold an admin row, so a
       // founder can never be locked out of /admin (June incident). Idempotent on every sign-in.
-      if (isBootstrapAdminEmail(email)) {
+      const emailVerified = linkedinProfile?.email_verified === true || linkedinProfile?.email_verified === "true";
+      if (emailVerified && isBootstrapAdminEmail(email)) {
         await db
           .insert(linkedinAccounts)
           .values({
@@ -81,7 +87,8 @@ export const authOptions: NextAuthOptions = {
       const invite = await getActiveInviteByCode(inviteCode);
       if (!invite) return false;
 
-      if (invite.email && email && invite.email.toLowerCase() !== email.toLowerCase()) return false;
+      // An email-locked invite needs LinkedIn to confirm that exact address.
+      if (invite.email && (!email || invite.email.toLowerCase() !== email.toLowerCase())) return false;
 
       const redeemedInvite = await redeemInviteCode(inviteCode, linkedinSub);
       if (!redeemedInvite) return false;

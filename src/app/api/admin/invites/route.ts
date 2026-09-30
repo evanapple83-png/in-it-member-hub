@@ -4,6 +4,7 @@ import { z } from "zod";
 import { invites } from "@/db/schema";
 import { generateInviteCode, hashInviteCode } from "@/lib/invites";
 import { requireAdminFromRequest } from "@/lib/admin-auth";
+import { readJson } from "@/lib/validation";
 
 const createInviteSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
@@ -32,8 +33,8 @@ export async function POST(request: Request) {
   const admin = await requireAdminFromRequest();
   if (!admin.ok) return NextResponse.json({ error: admin.error }, { status: admin.status });
 
-  const payload = createInviteSchema.safeParse(await request.json());
-  if (!payload.success) return NextResponse.json({ error: "Invite email or note is invalid." }, { status: 400 });
+  const payload = createInviteSchema.safeParse(await readJson(request));
+  if (!payload.success) return NextResponse.json({ error: "Controleer het e-mailadres of de notitie." }, { status: 400 });
 
   const code = generateInviteCode();
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -64,8 +65,8 @@ export async function PATCH(request: Request) {
   const admin = await requireAdminFromRequest();
   if (!admin.ok) return NextResponse.json({ error: admin.error }, { status: admin.status });
 
-  const payload = z.object({ id: z.string().uuid(), status: z.literal("revoked") }).safeParse(await request.json());
-  if (!payload.success) return NextResponse.json({ error: "Invite update is invalid." }, { status: 400 });
+  const payload = z.object({ id: z.string().uuid(), status: z.literal("revoked") }).safeParse(await readJson(request));
+  if (!payload.success) return NextResponse.json({ error: "Deze uitnodiging kan niet worden aangepast." }, { status: 400 });
 
   const [invite] = await admin.db
     .update(invites)

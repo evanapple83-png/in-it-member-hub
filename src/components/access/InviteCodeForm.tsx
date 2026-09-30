@@ -43,6 +43,8 @@ export function InviteCodeForm({ initialCode = "" }: { initialCode?: string }) {
         next = { ok: true, text: until ? `Code klopt. Geldig tot ${until}.` : "Code klopt." };
       } else if (res?.status === 404) {
         next = { ok: false, text: "Deze code klopt niet, is verlopen of al gebruikt. Vraag de beheerder om een nieuwe." };
+      } else if (res?.status === 429) {
+        next = { ok: false, text: "Te veel pogingen achter elkaar. Wacht tien minuten en probeer het opnieuw." };
       } else if (res?.status === 400) {
         next = { ok: false, text: "Vul de 8 tekens van je code in." };
       } else {

@@ -4,24 +4,25 @@ import { eq } from "drizzle-orm";
 import { members } from "@/db/schema";
 import { memberFromRow } from "@/db/mapper";
 import { requireAdminFromRequest } from "@/lib/admin-auth";
+import { imageUrl, linkedinUrl, optionalUrl, readJson, shortText, tagList } from "@/lib/validation";
 
 const memberPatchSchema = z
   .object({
     visibility_status: z.enum(["pending", "approved", "hidden", "rejected", "deactivated"]).optional(),
     member_type: z.enum(["member", "friend"]).optional(),
-    full_name: z.string().min(2).optional(),
-    email: z.string().email().optional(),
-    linkedin_url: z.string().nullable().optional(),
-    photo_url: z.string().nullable().optional(),
-    headline: z.string().nullable().optional(),
-    role: z.string().nullable().optional(),
-    company: z.string().nullable().optional(),
-    location: z.string().nullable().optional(),
-    about: z.string().nullable().optional(),
-    skills: z.array(z.string()).optional(),
-    can_help_with: z.array(z.string()).optional(),
-    looking_for: z.array(z.string()).optional(),
-    languages: z.array(z.string()).optional(),
+    full_name: shortText(120).pipe(z.string().min(2)).optional(),
+    email: z.string().trim().email().max(254).optional(),
+    linkedin_url: optionalUrl(linkedinUrl),
+    photo_url: optionalUrl(imageUrl),
+    headline: shortText(160).nullable().optional(),
+    role: shortText(160).nullable().optional(),
+    company: shortText(160).nullable().optional(),
+    location: shortText(160).nullable().optional(),
+    about: shortText(2000).nullable().optional(),
+    skills: tagList.optional(),
+    can_help_with: tagList.optional(),
+    looking_for: tagList.optional(),
+    languages: tagList.optional(),
     open_to_mentor: z.boolean().optional(),
     open_to_opportunities: z.boolean().optional(),
     open_to_collaborate: z.boolean().optional(),
@@ -30,13 +31,13 @@ const memberPatchSchema = z
     // Optional note shown to the applicant on /wachten when rejected.
     rejection_reason: z.string().max(500).nullable().optional(),
   })
-  .refine((data) => Object.keys(data).length > 0, "No changes provided.");
+  .refine((data) => Object.keys(data).length > 0, "Er is niets gewijzigd.");
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdminFromRequest();
   if (!admin.ok) return NextResponse.json({ error: admin.error }, { status: admin.status });
-  const payload = memberPatchSchema.safeParse(await request.json());
-  if (!payload.success) return NextResponse.json({ error: "Invalid member update." }, { status: 400 });
+  const payload = memberPatchSchema.safeParse(await readJson(request));
+  if (!payload.success) return NextResponse.json({ error: "Controleer de profielgegevens en probeer opnieuw." }, { status: 400 });
   const { id } = await params;
   const changes = payload.data;
   const [row] = await admin.db
@@ -74,7 +75,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     })
     .where(eq(members.id, id))
     .returning();
-  if (!row) return NextResponse.json({ error: "Member not found." }, { status: 404 });
+  if (!row) return NextResponse.json({ error: "Lid niet gevonden." }, { status: 404 });
   return NextResponse.json({ member: memberFromRow(row) });
 }
 

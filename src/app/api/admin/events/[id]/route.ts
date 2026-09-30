@@ -3,6 +3,7 @@ import { z } from "zod";
 import { deleteEvent, publishEvent, unpublishEvent, updateEvent } from "@/lib/events";
 import { requireAdminFromRequest } from "@/lib/admin-auth";
 import { adminCan } from "@/lib/roles";
+import { httpsUrl, optionalUrl, readJson } from "@/lib/validation";
 
 const patchSchema = z.object({
   action: z.enum(["update", "publish", "unpublish"]).default("update"),
@@ -14,9 +15,9 @@ const patchSchema = z.object({
   ends_at: z.string().datetime({ offset: true }).nullable().optional(),
   category: z.string().max(50).optional(),
   // Mirror the POST schema: links must be real URLs ("" / null clears the field).
-  meet_link: z.string().url().max(500).nullable().optional().or(z.literal("")),
-  calendar_link: z.string().url().max(500).nullable().optional().or(z.literal("")),
-  cover_image_url: z.string().url().max(500).nullable().optional().or(z.literal("")),
+  meet_link: optionalUrl(httpsUrl),
+  calendar_link: optionalUrl(httpsUrl),
+  cover_image_url: optionalUrl(httpsUrl),
   audience: z.string().max(50).optional(),
 });
 
@@ -28,7 +29,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const { id } = await params;
-  const parsed = patchSchema.safeParse(await request.json().catch(() => null));
+  const parsed = patchSchema.safeParse(await readJson(request));
   if (!parsed.success) return NextResponse.json({ error: "Ongeldige activiteit-update." }, { status: 400 });
   const data = parsed.data;
 

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { approveAccessRequest, listAccessRequests, rejectAccessRequest } from "@/lib/access-requests";
 import { requireAdminFromRequest } from "@/lib/admin-auth";
 import { adminCan } from "@/lib/roles";
+import { readJson } from "@/lib/validation";
 
 export async function GET() {
   const admin = await requireAdminFromRequest();
@@ -25,7 +26,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Alleen de coordinator mag toegangsaanvragen beoordelen." }, { status: 403 });
   }
 
-  const parsed = reviewSchema.safeParse(await request.json().catch(() => null));
+  const parsed = reviewSchema.safeParse(await readJson(request));
   if (!parsed.success) return NextResponse.json({ error: "Invalid review payload." }, { status: 400 });
 
   const result =

@@ -5,6 +5,7 @@ import { getApprovedCurrentMember } from "@/lib/access";
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { deleteCommunityPost, getCommunityPost, setCommunityPostStatus } from "@/lib/communities";
 import { adminCan } from "@/lib/roles";
+import { readJson } from "@/lib/validation";
 
 // Admin (beheerder) moderates any post; an author may remove their own.
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -15,7 +16,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const { id } = await params;
-  const parsed = z.object({ status: z.enum(["published", "hidden"]) }).safeParse(await request.json().catch(() => null));
+  const parsed = z.object({ status: z.enum(["published", "hidden"]) }).safeParse(await readJson(request));
   if (!parsed.success) return NextResponse.json({ error: "Ongeldige status." }, { status: 400 });
 
   await setCommunityPostStatus(id, parsed.data.status);

@@ -16,6 +16,8 @@ export function RequestAccessForm() {
   const [motivation, setMotivation] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
+  // Honeypot: invisible to people, bots fill every field and get rejected by the API.
+  const [website, setWebsite] = useState("");
 
   async function submit() {
     setStatus("sending");
@@ -30,6 +32,7 @@ export function RequestAccessForm() {
         requester_type: requesterType,
         linkedin_url: linkedinUrl,
         motivation,
+        ...(website ? { website } : {}),
       }),
     });
     const body = await response.json().catch(() => ({}));
@@ -108,6 +111,16 @@ export function RequestAccessForm() {
           />
         </label>
 
+        <input
+          type="text"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+          style={{ position: "absolute", left: "-10000px", width: 1, height: 1, opacity: 0 }}
+        />
         {error ? <p className="text-sm font-semibold text-date">{error}</p> : null}
 
         <div className="flex items-center gap-3">

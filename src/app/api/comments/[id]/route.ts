@@ -5,6 +5,7 @@ import { getApprovedCurrentMember } from "@/lib/access";
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { deleteComment, getComment, setCommentStatus } from "@/lib/comments";
 import { adminCan } from "@/lib/roles";
+import { readJson } from "@/lib/validation";
 
 const UNAVAILABLE = "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw.";
 
@@ -17,7 +18,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const { id } = await params;
-  const parsed = z.object({ status: z.enum(["published", "hidden"]) }).safeParse(await request.json().catch(() => null));
+  const parsed = z.object({ status: z.enum(["published", "hidden"]) }).safeParse(await readJson(request));
   if (!parsed.success) return NextResponse.json({ error: "Ongeldige status." }, { status: 400 });
   if (!(await getComment(id))) return NextResponse.json({ error: "Reactie niet gevonden." }, { status: 404 });
 

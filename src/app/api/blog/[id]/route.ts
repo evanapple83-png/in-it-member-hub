@@ -5,11 +5,12 @@ import { getApprovedCurrentMember } from "@/lib/access";
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { deleteBlogPost, getBlogPostById, setBlogPostShowcase, setBlogPostStatus, updateBlogPost } from "@/lib/blog";
 import { adminCan } from "@/lib/roles";
+import { httpsUrl, optionalUrl, readJson } from "@/lib/validation";
 
 const patchSchema = z.object({
   title: z.string().min(3).max(140).optional(),
   body: z.string().min(10).max(20000).optional(),
-  cover_image_url: z.string().url().max(500).optional().or(z.literal("")),
+  cover_image_url: optionalUrl(httpsUrl),
   // Moderation (beheerder-only)
   status: z.enum(["published", "hidden"]).optional(),
   showcase: z.boolean().optional(),
@@ -23,7 +24,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const [member, role, post] = await Promise.all([getApprovedCurrentMember(), getCurrentAdminRole(), getBlogPostById(id)]);
   if (!post) return NextResponse.json({ error: "Verhaal niet gevonden." }, { status: 404 });
 
-  const parsed = patchSchema.safeParse(await request.json().catch(() => null));
+  const parsed = patchSchema.safeParse(await readJson(request));
   if (!parsed.success) return NextResponse.json({ error: "Controleer de velden en probeer opnieuw." }, { status: 400 });
   const data = parsed.data;
 

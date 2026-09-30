@@ -7,6 +7,7 @@ import { linkedinAccounts, members } from "@/db/schema";
 import { getCurrentMember } from "@/lib/access";
 import { authOptions } from "@/lib/auth";
 import { deleteProfilePhotos } from "@/lib/profile-photos";
+import { readJson } from "@/lib/validation";
 
 // Own profile read — used by the profile form to hydrate existing values
 // so a re-save never silently wipes previously stored fields.
@@ -28,7 +29,7 @@ export async function PATCH(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Log eerst in." }, { status: 401 });
 
-  const parsed = patchSchema.safeParse(await request.json().catch(() => null));
+  const parsed = patchSchema.safeParse(await readJson(request));
   if (!parsed.success) return NextResponse.json({ error: "Ongeldige aanvraag." }, { status: 400 });
 
   const db = getDb();

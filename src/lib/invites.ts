@@ -46,7 +46,8 @@ export async function redeemInviteCode(code: string, userId: string) {
       usedByUserId: userId,
       updatedAt: new Date(),
     })
-    .where(eq(invites.id, activeInvite.id))
+    // Conditional update: of two simultaneous sign-ins with the same code only one gets a row back.
+    .where(and(eq(invites.id, activeInvite.id), eq(invites.status, "active"), isNull(invites.usedAt)))
     .returning();
 
   return invite ?? null;

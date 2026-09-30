@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createEvent, listAllEventsForAdmin } from "@/lib/events";
 import { requireAdminFromRequest } from "@/lib/admin-auth";
 import { adminCan } from "@/lib/roles";
+import { httpsUrl, optionalUrl, readJson } from "@/lib/validation";
 
 export async function GET() {
   const admin = await requireAdminFromRequest();
@@ -21,9 +22,9 @@ const eventSchema = z.object({
   starts_at: z.string().datetime({ offset: true }),
   ends_at: z.string().datetime({ offset: true }).optional().or(z.literal("")),
   category: z.string().max(50).optional(),
-  meet_link: z.string().url().max(500).optional().or(z.literal("")),
-  calendar_link: z.string().url().max(500).optional().or(z.literal("")),
-  cover_image_url: z.string().url().max(500).optional().or(z.literal("")),
+  meet_link: optionalUrl(httpsUrl),
+  calendar_link: optionalUrl(httpsUrl),
+  cover_image_url: optionalUrl(httpsUrl),
   audience: z.string().max(50).optional(),
 });
 
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Alleen de coordinator mag activiteiten beheren." }, { status: 403 });
   }
 
-  const parsed = eventSchema.safeParse(await request.json().catch(() => null));
+  const parsed = eventSchema.safeParse(await readJson(request));
   if (!parsed.success) return NextResponse.json({ error: "Controleer de activiteitsgegevens." }, { status: 400 });
 
   const data = parsed.data;

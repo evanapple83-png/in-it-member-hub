@@ -16,14 +16,17 @@ export type AdminCapability =
   | "manage_communities"; // Niet in FRD: communities aanmaken/beheren (extra-wens Evan)
 
 // Returns the capabilities a role holds, or `null` for "all capabilities".
-// Today both roles map to null (combined coordinator+beheerder). To split the roles,
-// return concrete capability lists per role here — call sites already gate on adminCan().
+// Today both known roles map to null (combined coordinator+beheerder). To split the roles,
+// return concrete capability lists per role here; call sites already gate on adminCan().
+// The admins.role column defaults to "admin", so every existing row keeps full access.
+// Anything else (a typo, an empty value, a future role not wired up yet) gets nothing: fail closed.
 function capabilitiesFor(role: string | null | undefined): AdminCapability[] | null {
   switch (role) {
     case "coordinator":
     case "admin":
-    default:
       return null;
+    default:
+      return [];
   }
 }
 

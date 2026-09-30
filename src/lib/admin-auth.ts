@@ -2,7 +2,8 @@ import { eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { admins } from "@/db/schema";
 import { getDb, hasDatabase } from "@/db";
-import { authOptions } from "@/lib/auth";
+import { getAccessState } from "@/lib/access-state";
+import { authOptions, isBootstrapAdminEmail } from "@/lib/auth";
 
 export async function requireAdminFromRequest() {
   if (!hasDatabase()) {
@@ -21,6 +22,13 @@ export async function requireAdminFromRequest() {
     .where(eq(admins.userId, session.user.id))
     .limit(1);
   if (!admin) return { ok: false as const, error: "Unauthorized admin route.", status: 403 };
+
+  // An admin row alone is not enough: a deactivated or rejected member loses admin rights too.
+  // Same founder exception as requireAdminAccess, so a founder can never be locked out.
+  const access = await getAccessState();
+  if (access.state !== "approved" && !isBootstrapAdminEmail(session.user.email)) {
+    return { ok: false as const, error: "Je beheerrechten zijn niet actief.", status: 403 };
+  }
 
   return { ok: true as const, session, db, adminId: admin.id, role: admin.role };
 }

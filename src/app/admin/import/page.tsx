@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { CsvImport } from "@/components/admin/CsvImport";
+import { requireAdminAccess } from "@/lib/access-state";
 
-export default function AdminImportPage() {
+export default async function AdminImportPage() {
+  // Every admin page checks for itself: the layout gate alone can be skipped on partial renders.
+  await requireAdminAccess();
   return (
     <div className="page">
       <div className="hello">

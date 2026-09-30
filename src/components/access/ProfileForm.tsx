@@ -192,10 +192,13 @@ export function ProfileForm({ mode, returnTo }: { mode: "new" | "edit"; returnTo
       body: JSON.stringify(form),
     }).catch(() => null);
     if (!res?.ok) {
+      const body = await res?.json().catch(() => null);
       setError(
         res?.status === 401
           ? "Je bent uitgelogd. Log opnieuw in met LinkedIn en probeer het nog eens."
-          : "Opslaan lukte niet. Controleer je gegevens en probeer het opnieuw.",
+          : (res?.status === 409 || res?.status === 403) && body?.error
+            ? body.error
+            : "Opslaan lukte niet. Controleer je gegevens (links beginnen met https://) en probeer het opnieuw.",
       );
       setSaving(false);
       return;

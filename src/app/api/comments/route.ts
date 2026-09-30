@@ -7,6 +7,8 @@ import { COMMENT_MAX_LENGTH, createComment, getCommentTarget, lastCommentAt, lis
 import { getMembership } from "@/lib/communities";
 import { adminCan } from "@/lib/roles";
 import type { Comment } from "@/lib/types";
+import { readJson } from "@/lib/validation";
+import { tooManyRequests, underLimit } from "@/lib/rate-limit";
 
 const UNAVAILABLE = "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw.";
 const RATE_LIMIT_MS = 5_000;
@@ -50,8 +52,9 @@ export async function POST(request: Request) {
   if (!hasDatabase()) return NextResponse.json({ error: UNAVAILABLE }, { status: 503 });
   const { member, isModerator } = await viewer();
   if (!member) return NextResponse.json({ error: "Alleen geautoriseerde leden kunnen reageren." }, { status: 403 });
+  if (!(await underLimit(`comment:${member.id}`, 20, 600))) return tooManyRequests();
 
-  const parsed = postSchema.safeParse(await request.json().catch(() => null));
+  const parsed = postSchema.safeParse(await readJson(request));
   if (!parsed.success) {
     const tooLong = parsed.error.issues.some((issue) => issue.code === "too_big");
     return NextResponse.json(

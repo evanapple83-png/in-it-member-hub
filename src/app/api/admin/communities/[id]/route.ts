@@ -3,12 +3,13 @@ import { z } from "zod";
 import { deleteCommunity, updateCommunity } from "@/lib/communities";
 import { requireAdminFromRequest } from "@/lib/admin-auth";
 import { adminCan } from "@/lib/roles";
+import { imageUrl, optionalUrl, readJson } from "@/lib/validation";
 
 const patchSchema = z.object({
   name: z.string().min(2).max(80).optional(),
   description: z.string().max(500).nullable().optional().or(z.literal("")),
   category: z.enum(["professional", "social"]).optional(),
-  cover_image_url: z.string().url().max(500).nullable().optional().or(z.literal("")),
+  cover_image_url: optionalUrl(imageUrl),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -19,7 +20,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const { id } = await params;
-  const parsed = patchSchema.safeParse(await request.json().catch(() => null));
+  const parsed = patchSchema.safeParse(await readJson(request));
   if (!parsed.success) return NextResponse.json({ error: "Ongeldige community-update." }, { status: 400 });
   const data = parsed.data;
 

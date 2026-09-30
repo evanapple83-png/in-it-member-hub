@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createCommunity, listCommunitiesForAdmin } from "@/lib/communities";
 import { requireAdminFromRequest } from "@/lib/admin-auth";
 import { adminCan } from "@/lib/roles";
+import { imageUrl, optionalUrl, readJson } from "@/lib/validation";
 
 export async function GET() {
   const admin = await requireAdminFromRequest();
@@ -18,7 +19,7 @@ const communitySchema = z.object({
   name: z.string().min(2).max(80),
   description: z.string().max(500).optional().or(z.literal("")),
   category: z.enum(["professional", "social"]).optional(),
-  cover_image_url: z.string().url().max(500).optional().or(z.literal("")),
+  cover_image_url: optionalUrl(imageUrl),
 });
 
 export async function POST(request: Request) {
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Alleen de beheerder mag communities beheren." }, { status: 403 });
   }
 
-  const parsed = communitySchema.safeParse(await request.json().catch(() => null));
+  const parsed = communitySchema.safeParse(await readJson(request));
   if (!parsed.success) return NextResponse.json({ error: "Controleer de communitygegevens." }, { status: 400 });
 
   const data = parsed.data;
