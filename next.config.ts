@@ -20,7 +20,6 @@ const csp = [
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self' https://www.linkedin.com",
   ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
