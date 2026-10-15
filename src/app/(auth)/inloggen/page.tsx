@@ -5,6 +5,8 @@ import { AuthSplit } from "@/components/app/AuthSplit";
 import { LinkedInSignIn } from "@/components/access/LinkedInSignIn";
 import { Icon } from "@/components/ui/icon";
 import { getAccessState, homeForState } from "@/lib/access-state";
+import { isLocalDevAuthEnabled } from "@/lib/local-dev-auth";
+import { LocalDevSignIn } from "@/components/access/LocalDevSignIn";
 
 export const metadata = { title: "Inloggen | IN-IT" };
 
@@ -77,6 +79,7 @@ export default async function InloggenPage({ searchParams }: { searchParams: Pro
         </p>
       ) : null}
       <LinkedInSignIn label="Inloggen met LinkedIn" />
+      {isLocalDevAuthEnabled() ? <LocalDevSignIn /> : null}
       <div className="or">nieuw bij IN-IT</div>
       <Link data-press className="btn ghost full" href="/join">
         <Icon name="key" />

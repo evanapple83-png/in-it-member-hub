@@ -1,9 +1,11 @@
 import type { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/db";
-import { admins, linkedinAccounts } from "@/db/schema";
+import { admins, linkedinAccounts, members } from "@/db/schema";
 import { getActiveInviteByCode, redeemInviteCode } from "@/lib/invites";
+import { isLocalDevAuthEnabled, LOCAL_DEV_USERS } from "@/lib/local-dev-auth";
 
 export function isBootstrapAdminEmail(email?: string | null) {
   const allowed = process.env.BOOTSTRAP_ADMIN_EMAILS?.split(",").map((item) => item.trim().toLowerCase()) ?? [];
@@ -16,6 +18,19 @@ export const authOptions: NextAuthOptions = {
   // every request (access-state.ts), so this only bounds how long a stolen cookie stays useful.
   session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 7, updateAge: 60 * 60 * 24 },
   providers: [
+    ...(isLocalDevAuthEnabled() ? [CredentialsProvider({
+      id: "local-dev",
+      name: "Local development",
+      credentials: { account: { label: "Account", type: "text" } },
+      async authorize(credentials) {
+        if (!isLocalDevAuthEnabled()) return null;
+        const account = credentials?.account;
+        if (!account || !Object.hasOwn(LOCAL_DEV_USERS, account)) return null;
+        const user = LOCAL_DEV_USERS[account as keyof typeof LOCAL_DEV_USERS];
+        const [member] = await getDb().select({ id: members.id }).from(members).where(eq(members.userId, user.id)).limit(1);
+        return member ? user : null;
+      },
+    })] : []),
     {
       id: "linkedin",
       name: "LinkedIn",
@@ -40,7 +55,8 @@ export const authOptions: NextAuthOptions = {
     },
   ],
   callbacks: {
-    async signIn({ user, profile }) {
+    async signIn({ user, profile, account }) {
+      if (account?.provider === "local-dev") return isLocalDevAuthEnabled();
       if (!hasDatabase()) return true;
 
       const linkedinProfile = profile as

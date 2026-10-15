@@ -19,12 +19,46 @@ Premium MVP for the Iraqi Network of Information Technology: a smart, searchable
 
 ## Local setup
 
+For a self-contained development environment, install **Node.js 22+** and **Docker with Compose**, then run:
+
 ```bash
-npm install
+npm ci
+cp .env.local.example .env.local
+npm run db:local:up
+npm run db:local:setup
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000/inloggen` and choose a local test account: **Beheerder** (admin),
+**Goedgekeurd lid** (approved member), or **Wachtend lid** (pending member). LinkedIn, Neon,
+Vercel and Resend accounts are not needed for this workflow. Replace the example session
+secret with a value from `openssl rand -base64 32`.
+
+Postgres listens on `127.0.0.1:55432` with database `init_member_hub`, user `init`, and password
+`init_local`. The application uses a TCP Postgres driver for loopback database URLs and
+retains the Neon HTTP driver for hosted URLs.
+
+`db:local:setup` loads `.env.local`, applies the checked-in SQL migrations once, and seeds
+synthetic members, an admin, communities, memberships, future events, an RSVP, a community
+post, a blog post, a comment and an access request. It can be run again without duplicating
+demo content; existing demo edits are preserved. Its migration tracking is local-only;
+do not alternate it with `db:push` on the same database. It refuses non-loopback database URLs.
+
+Stop Postgres with `npm run db:local:down`; data stays in the Docker volume. Start it again
+with `npm run db:local:up`. If port 55432 is occupied, change the host port in `compose.yaml`
+and the port in `.env.local` together.
+
+Local test login requires `LOCAL_DEV_AUTH=true`, `NODE_ENV=development`, loopback URLs for
+both the database and `NEXTAUTH_URL`, and no Vercel environment. It is disabled in production
+and uses normal sessions and database access checks. `npm run dev` binds the server to
+loopback so these test accounts are only accessible from your machine. Set
+`LOCAL_DEV_AUTH=false` and provide LinkedIn credentials to test the real invite/login flow.
+
+Uploads require `BLOB_READ_WRITE_TOKEN`. Email is logged rather than delivered unless
+`RESEND_API_KEY` is set; set `EMAIL_FROM` to a sender configured in Resend when enabling it.
+
+For hosted development instead, copy `.env.example` and follow the Neon and LinkedIn
+instructions below.
 
 Without `DATABASE_URL`, the app can render the public marketing surface, but invite-only auth, admin tools and private member areas require Neon.
 
@@ -88,7 +122,8 @@ Invite flow:
 5. The code is consumed during LinkedIn sign-in and cannot be reused.
 6. The member completes onboarding and remains pending until admin approval.
 
-For first-time setup, add your own email to `BOOTSTRAP_ADMIN_EMAILS` so you can sign in before invite codes exist. Then insert your LinkedIn subject into `admins`.
+For first-time hosted setup, add your own verified LinkedIn email to `BOOTSTRAP_ADMIN_EMAILS`
+so you can sign in before invite codes exist. Sign-in automatically creates your admin row.
 
 ## LinkedIn Developer App setup
 
