@@ -5,72 +5,73 @@ type Section = { title: string; paragraphs?: string[]; items?: string[] };
 
 const sections: Section[] = [
   {
-    title: "Who is responsible",
+    title: "Wie is verantwoordelijk?",
     paragraphs: [
-      `IN-IT (Iraqi Network of Information Technology) runs this member hub and is responsible for the personal data processed in it. For any privacy question or request, email ${PRIVACY_CONTACT_EMAIL}.`,
+      `IN-IT (Iraqi Network of Information Technology) beheert deze ledenomgeving en is verantwoordelijk voor de persoonsgegevens die hierin worden verwerkt. Heb je een privacyvraag of verzoek? Mail dan naar ${PRIVACY_CONTACT_EMAIL}.`,
     ],
   },
   {
-    title: "What we collect",
+    title: "Welke gegevens verzamelen we?",
     items: [
-      "Sign-in details from LinkedIn: your name, email address, profile picture and a LinkedIn account identifier. We do not import your connections, work history or anyone else's profile.",
-      "Your access request: name, email address, phone number if you give it, LinkedIn profile link, your motivation and who proposed you.",
-      "The profile you fill in yourself: for example your headline, role, company, location, skills, languages, what you can help with and what you are looking for, plus a profile photo if you upload one.",
-      "What you do in the hub: the communities you join, posts you write and the events you sign up for.",
+      "Inloggegevens van LinkedIn: je naam, e-mailadres, profielfoto en een accountidentificatie. We importeren geen connecties, werkgeschiedenis of profielen van anderen.",
+      "Je toegangsaanvraag: je naam, e-mailadres, eventueel telefoonnummer, LinkedIn-profiel, motivatie en wie je heeft voorgedragen.",
+      "Het profiel dat je zelf invult, zoals je omschrijving, functie, werkgever, woonplaats, vaardigheden, talen, wat je kunt bijdragen en wat je zoekt. Ook een profielfoto of cv dat je zelf uploadt wordt opgeslagen.",
+      "Je activiteit in de ledenomgeving: de groepen waar je lid van wordt, berichten die je schrijft en bijeenkomsten waarvoor je je aanmeldt.",
     ],
   },
   {
-    title: "Why we use it",
+    title: "Waarvoor gebruiken we je gegevens?",
     items: [
-      "To run your membership: checking access requests, letting you sign in and keeping the hub invite-only. This is needed to provide the membership you asked for.",
-      "To show your profile to other members. This only happens after you give consent and an admin approves your profile. You can take it back at any time by hiding your profile.",
-      "To send you messages about your membership, such as your activation code and new events. You can turn off event emails on your profile page.",
+      "Voor je lidmaatschap: toegangsaanvragen beoordelen, inloggen mogelijk maken en de besloten ledenomgeving beheren. Dit is nodig om het aangevraagde lidmaatschap aan te bieden.",
+      "Om je profiel aan andere leden te tonen. Dit gebeurt nadat je toestemming hebt gegeven en een beheerder je profiel heeft goedgekeurd. Je kunt deze toestemming intrekken door je profiel te laten verbergen.",
+      "Om berichten over je lidmaatschap te sturen, zoals je activeringscode en nieuwe activiteiten. Activiteitenmails kun je uitschakelen in je profielinstellingen.",
     ],
   },
   {
-    title: "Who can see your profile",
+    title: "Wie kan je profiel en cv zien?",
     paragraphs: [
-      "Your profile appears in the member directory only after you consent and an admin approves it, and only other approved members can see the directory. Your public profile page shows only the fields you marked as public yourself. Everything else stays inside the hub.",
+      "Goedgekeurde leden zien je profiel nadat je toestemming hebt gegeven en een beheerder het heeft goedgekeurd. Bezoekers zonder account zien je profiel alleen als je zelf openbare velden hebt geselecteerd. Dan zijn je naam en uitsluitend die gekozen velden zichtbaar in het openbare ledenoverzicht en op je openbare profielpagina.",
+      "Je cv is niet openbaar. Alleen jij en bevoegde beheerders kunnen het downloaden. Je kunt je cv in je profielinstellingen vervangen of verwijderen.",
     ],
   },
   {
-    title: "Services we rely on",
+    title: "Welke diensten gebruiken we?",
     paragraphs: [
-      "We share data only with the services that keep the hub running, each under a data processing agreement:",
+      "We delen gegevens alleen met de diensten die nodig zijn om de ledenomgeving te laten werken, op basis van verwerkersovereenkomsten:",
     ],
     items: [
-      "Vercel: hosts the website and stores uploaded profile photos.",
-      "Neon: stores the member database. Its servers are in the United States.",
-      "LinkedIn: handles signing in. LinkedIn's own privacy policy applies to your LinkedIn account.",
-      "Resend: delivers our emails.",
+      "Vercel: host de website en slaat geüploade profielfoto’s en groepsafbeeldingen op. Cv’s worden in een afzonderlijke, afgeschermde opslag bewaard.",
+      "Neon: beheert de ledendatabase. De servers bevinden zich in de Verenigde Staten.",
+      "LinkedIn: verzorgt het inloggen. Voor je LinkedIn-account geldt het privacybeleid van LinkedIn.",
+      "Resend: bezorgt onze e-mails.",
     ],
   },
   {
-    title: "Data outside the European Union",
+    title: "Gegevens buiten de Europese Unie",
     paragraphs: [
-      "Some of these services store or process data outside the EU, including in the United States. Where that happens, the transfer is covered by the safeguards in their data processing agreements, such as the EU Standard Contractual Clauses.",
+      "Sommige diensten slaan gegevens buiten de EU op of verwerken deze daar, onder meer in de Verenigde Staten. Bij zulke doorgiften gelden de waarborgen uit hun verwerkersovereenkomsten, zoals de Europese standaardcontractbepalingen.",
     ],
   },
   {
-    title: "How long we keep it",
+    title: "Hoe lang bewaren we je gegevens?",
     paragraphs: [
-      "We keep your profile for as long as you are a member. When you delete your account, your profile, your LinkedIn link and your uploaded photos are removed straight away. Posts you wrote stay visible as written by a removed member. Access requests are kept only as long as needed to handle them; you can ask us to remove yours at any time.",
+      "We bewaren je profiel zolang je lid bent. Als je je account verwijdert, worden je profiel, LinkedIn-koppeling, geüploade foto’s en cv verwijderd. Geschreven berichten blijven zichtbaar met de aanduiding van een verwijderd lid. Toegangsaanvragen bewaren we alleen zolang dat nodig is voor de afhandeling. Je kunt altijd vragen om je aanvraag te verwijderen.",
     ],
   },
   {
-    title: "Your rights",
+    title: "Je rechten",
     items: [
-      "See and download your data: use the download option on your profile page.",
-      "Correct your data: edit your profile at any time.",
-      "Delete your account: use the delete option on your profile page, or email us.",
-      "Withdraw consent or object: hide your profile, or email us.",
-      "Complain: you can file a complaint with the Dutch data protection authority, the Autoriteit Persoonsgegevens.",
+      "Je gegevens inzien en downloaden: gebruik de downloadoptie in je profielinstellingen.",
+      "Je gegevens corrigeren: pas je profiel op elk moment aan.",
+      "Je account verwijderen: gebruik de verwijderoptie in je profielinstellingen of mail ons.",
+      "Toestemming intrekken of bezwaar maken: laat je profiel verbergen of mail ons. Je openbare velden en je cv kun je zelf beheren.",
+      "Een klacht indienen: je kunt terecht bij de Autoriteit Persoonsgegevens.",
     ],
   },
   {
     title: "Cookies",
     paragraphs: [
-      "We only use cookies the hub needs to work: one that keeps you signed in and one that remembers your invite code while you sign in. We do not use tracking or advertising cookies.",
+      "We gebruiken alleen cookies die nodig zijn voor de werking van de ledenomgeving: om je ingelogd te houden en om je uitnodigingscode tijdens het inloggen te onthouden. We gebruiken geen tracking- of advertentiecookies.",
     ],
   },
 ];
@@ -79,11 +80,11 @@ export default function PrivacyPage() {
   return (
     <PageShell
       eyebrow="Privacy"
-      title="IN-IT Member Hub Privacy Policy"
-      description="How we handle your personal data in the invite-only IN-IT community."
+      title="Privacyverklaring van IN-IT"
+      description="Zo gaan we binnen IN-IT om met je persoonsgegevens."
     >
       <div className="max-w-4xl rounded-[2rem] border border-charcoal/10 bg-white/76 p-8 shadow-sm">
-        <p className="text-sm font-semibold text-charcoal/55">Last updated: September 28, 2026</p>
+        <p className="text-sm font-semibold text-charcoal/55">Laatst bijgewerkt: 15 oktober 2026</p>
         <div className="mt-8 grid gap-7">
           {sections.map((section) => (
             <section key={section.title}>

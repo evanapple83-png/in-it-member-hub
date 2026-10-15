@@ -245,6 +245,10 @@ shell-exported `DATABASE_URL`; use `db:local:setup` for the complete local demo.
 
 ## Project map
 
+The interface language is Dutch (`nl`). Keep page copy, navigation, button labels,
+accessibility labels and metadata in Dutch. Product names and standard technical terms
+can retain their usual spelling; member-written profile content uses the member's language.
+
 - `src/app/(public)/`: public pages and public profile details.
 - `src/app/(directory)/`: directory routes with guest and signed-in views.
 - `src/app/(app)/`: private member hub, events, communities, stories and profile settings.
