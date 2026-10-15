@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { members } from "@/db/schema";
 import { memberFromRow } from "@/db/mapper";
 import { requireAdminFromRequest } from "@/lib/admin-auth";
+import { deleteMemberCv } from "@/lib/member-cvs";
 import { imageUrl, linkedinUrl, optionalUrl, readJson, shortText, tagList } from "@/lib/validation";
 
 const memberPatchSchema = z
@@ -83,6 +84,12 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const admin = await requireAdminFromRequest();
   if (!admin.ok) return NextResponse.json({ error: admin.error }, { status: admin.status });
   const { id } = await params;
+  try {
+    await deleteMemberCv(id);
+  } catch (error) {
+    console.error("[admin:delete] cv cleanup failed", error);
+    return NextResponse.json({ error: "Het cv verwijderen lukte niet. Probeer het opnieuw." }, { status: 503 });
+  }
   await admin.db.delete(members).where(eq(members.id, id));
   return NextResponse.json({ ok: true });
 }

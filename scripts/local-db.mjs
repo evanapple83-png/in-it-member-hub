@@ -32,7 +32,7 @@ try {
   }
   await client.query("begin");
   try {
-    for (const path of ["../drizzle/seed.sql", "../drizzle/seed-local.sql"]) {
+    for (const path of ["../drizzle/seed.sql", "../drizzle/seed-local.sql", "../drizzle/seed-it-members.sql"]) {
       await client.query(await readFile(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
     }
     await client.query("commit");

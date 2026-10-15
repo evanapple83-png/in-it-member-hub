@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import { PublicMemberProfile } from "@/components/members/PublicMemberProfile";
 import { Avatar } from "@/components/app/Avatar";
 import { Cover } from "@/components/app/Cover";
 import { EmptyState } from "@/components/app/EmptyState";
@@ -11,7 +12,10 @@ import { getApprovedCurrentMember } from "@/lib/access";
 import { getCommunities } from "@/lib/communities";
 import { listPublishedEvents } from "@/lib/events";
 import { getCommunityCounts, getGoingEventIds, getJoinedCommunityIds, getStoryCount, upcomingEvents } from "@/lib/hub";
-import { getPublicMember } from "@/lib/members";
+import { getPublicMember, getPublicProfile } from "@/lib/members";
+import { getCurrentAdminRole } from "@/lib/admin-auth";
+import { adminCan } from "@/lib/roles";
+import { getMemberCv } from "@/lib/member-cvs";
 
 export const metadata = { title: "Profiel | IN-IT" };
 
@@ -29,12 +33,17 @@ function Chips({ items }: { items: string[] }) {
 
 export default async function MemberProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const viewer = await getApprovedCurrentMember();
-  if (!viewer) redirect("/join?locked=members");
-
   const { id } = await params;
+  if (!viewer) {
+    const profile = await getPublicProfile(id);
+    if (!profile) notFound();
+    return <PublicMemberProfile member={profile} />;
+  }
   const member = await getPublicMember(id);
   if (!member) notFound();
   const own = member.id === viewer.id;
+  const canReadCv = own || adminCan(await getCurrentAdminRole(), "manage_users");
+  const cv = canReadCv ? await getMemberCv(member.id) : null;
 
   const [groups, counts, joinedIds, viewerJoined, goingIds, events, stories] = await Promise.all([
     getCommunities(),
@@ -188,6 +197,12 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
         </div>
       </section>
 
+      {cv ? (
+        <section className="panel">
+          <h2>Cv</h2>
+          <a className="btn ghost" href={`/api/members/${member.id}/cv`}>Cv downloaden (PDF)</a>
+        </section>
+      ) : null}
       <TabbedPanels
         label="Profielonderdelen"
         tabs={[

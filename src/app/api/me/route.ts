@@ -8,6 +8,7 @@ import { getCurrentMember } from "@/lib/access";
 import { authOptions } from "@/lib/auth";
 import { deleteProfilePhotos } from "@/lib/profile-photos";
 import { readJson } from "@/lib/validation";
+import { deleteMemberCv } from "@/lib/member-cvs";
 
 // Own profile read — used by the profile form to hydrate existing values
 // so a re-save never silently wipes previously stored fields.
@@ -52,6 +53,14 @@ export async function DELETE() {
   if (!hasDatabase()) return NextResponse.json({ error: "De service is tijdelijk niet beschikbaar. Probeer het later opnieuw." }, { status: 503 });
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Log eerst in." }, { status: 401 });
+
+  const member = await getCurrentMember();
+  try {
+    if (member) await deleteMemberCv(member.id);
+  } catch (error) {
+    console.error("[me:delete] cv cleanup failed", error);
+    return NextResponse.json({ error: "Je cv verwijderen lukte niet. Probeer het opnieuw." }, { status: 503 });
+  }
 
   const db = getDb();
   await db.delete(linkedinAccounts).where(eq(linkedinAccounts.userId, session.user.id));

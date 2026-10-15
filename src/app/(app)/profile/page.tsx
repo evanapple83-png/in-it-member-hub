@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Avatar } from "@/components/app/Avatar";
 import { Panel } from "@/components/app/Panel";
 import { PrivacyControls } from "@/components/profile/PrivacyControls";
+import { CvUpload } from "@/components/profile/CvUpload";
 import { Icon } from "@/components/ui/icon";
 import { getApprovedCurrentMember } from "@/lib/access";
 import { isProfileComplete } from "@/lib/hub";
@@ -77,6 +78,7 @@ export default async function ProfilePage() {
             </p>
           </Panel>
 
+          <Panel reveal title="Je cv"><CvUpload /></Panel>
           <PrivacyControls initialEmailOptOut={member.email_opt_out} />
         </div>
 

@@ -13,7 +13,11 @@
     "db:local:up": "docker compose up -d --wait",
     "db:local:down": "docker compose stop",
     "db:local:setup": "node scripts/local-db.mjs",
-    "test:local-auth": "node --experimental-strip-types --test tests/local-dev-auth.test.mjs"
+    "test:local-auth": "node --experimental-strip-types --test tests/local-dev-auth.test.mjs",
+    "test:public-profiles": "node --experimental-strip-types --test tests/public-profile.test.mjs",
+    "test:public-members": "node tests/public-members.integration.mjs",
+    "test:cv": "node --experimental-strip-types --test tests/cv-validation.test.mjs",
+    "test:cv:integration": "node tests/cv.integration.mjs"
   },
   "dependencies": {
     "@gsap/react": "2.1.2",

@@ -38,6 +38,16 @@ export const members = pgTable("members", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+// Private document metadata stays separate from member profiles and directory responses.
+export const memberCvs = pgTable("member_cvs", {
+  memberId: uuid("member_id").primaryKey().references(() => members.id, { onDelete: "cascade" }),
+  storageProvider: text("storage_provider").notNull(),
+  storageKey: text("storage_key").notNull(),
+  filename: text("filename").notNull(),
+  size: integer("size").notNull(),
+  uploadedAt: timestamp("uploaded_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 // FR-004/005/020/021: digitale toegangsaanvraag (zelf-aanvraag of voorgedragen vriend),
 // beoordeeld en geregistreerd door de coordinator. Vervangt het ongeregistreerde telefonische proces.
 export const accessRequests = pgTable("access_requests", {

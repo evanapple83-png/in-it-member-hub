@@ -19,7 +19,7 @@ const privateNavItems = [
   { href: "/contact", label: "Contact" },
 ];
 
-const publicNavItems = [{ href: "/about", label: "About" }];
+const publicNavItems = [{ href: "/members", label: "Members" }, { href: "/about", label: "About" }];
 
 async function isAdmin(userId?: string) {
   if (!userId || !hasDatabase()) return false;

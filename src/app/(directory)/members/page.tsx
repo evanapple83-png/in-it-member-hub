@@ -1,12 +1,21 @@
-import { redirect } from "next/navigation";
 import { MembersView, type DirectoryMember } from "@/components/app/community/MembersView";
 import { isApprovedMember } from "@/lib/access";
-import { getPublicMembers } from "@/lib/members";
+import { getPublicMembers, getPublicProfiles } from "@/lib/members";
+import { PublicMembersView } from "@/components/members/PublicMembersView";
 
 export const metadata = { title: "Leden | IN-IT" };
 
 export default async function MembersPage() {
-  if (!(await isApprovedMember())) redirect("/join?locked=members");
+  if (!(await isApprovedMember())) {
+    const profiles = await getPublicProfiles();
+    return (
+      <section className="mx-auto max-w-7xl px-4 pb-16 pt-32 sm:px-6 sm:pt-36 lg:px-8">
+        <h1 className="text-4xl font-black tracking-tight">Leden</h1>
+        <p className="mb-8 mt-3 text-charcoal/70">Ontdek de leden die hun profiel openbaar delen.</p>
+        <PublicMembersView members={profiles} />
+      </section>
+    );
+  }
 
   const members = await getPublicMembers();
   const directory: DirectoryMember[] = members.map((m) => ({

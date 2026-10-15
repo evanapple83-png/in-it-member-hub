@@ -5,6 +5,7 @@ import { getDb, hasDatabase } from "@/db";
 import { memberFromRow } from "@/db/mapper";
 import { blogPosts, communityMemberships, communityPosts, eventRsvps, linkedinAccounts, members } from "@/db/schema";
 import { authOptions } from "@/lib/auth";
+import { cvDetails, getMemberCv } from "@/lib/member-cvs";
 
 // AVG §9.1 inzage: alle gegevens die we van het lid bewaren als downloadbare JSON.
 export async function GET() {
@@ -16,17 +17,19 @@ export async function GET() {
   const [memberRow] = await db.select().from(members).where(eq(members.userId, session.user.id)).limit(1);
   if (!memberRow) return NextResponse.json({ error: "Geen profiel gevonden." }, { status: 404 });
 
-  const [linkedin, memberships, rsvps, blog, posts] = await Promise.all([
+  const [linkedin, memberships, rsvps, blog, posts, cv] = await Promise.all([
     db.select().from(linkedinAccounts).where(eq(linkedinAccounts.userId, session.user.id)),
     db.select().from(communityMemberships).where(eq(communityMemberships.memberId, memberRow.id)),
     db.select().from(eventRsvps).where(eq(eventRsvps.memberId, memberRow.id)),
     db.select().from(blogPosts).where(eq(blogPosts.authorMemberId, memberRow.id)),
     db.select().from(communityPosts).where(eq(communityPosts.authorMemberId, memberRow.id)),
+    getMemberCv(memberRow.id),
   ]);
 
   const payload = {
     exported_at: new Date().toISOString(),
     profile: memberFromRow(memberRow),
+    cv: cv ? cvDetails(cv) : null,
     linkedin_accounts: linkedin.map((account) => ({
       linkedin_sub: account.linkedinSub,
       linkedin_email: account.linkedinEmail,

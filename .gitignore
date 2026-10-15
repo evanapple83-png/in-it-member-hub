@@ -22,6 +22,7 @@
 
 # misc
 .DS_Store
+.local/
 *.pem
 .agents/
 skills-lock.json
