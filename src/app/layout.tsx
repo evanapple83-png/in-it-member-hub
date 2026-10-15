@@ -22,9 +22,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IN-IT Member Hub",
+  title: "IN-IT Ledenomgeving",
   description:
-    "A smart, searchable community hub for Iraqi tech professionals in the Netherlands.",
+    "Een community voor Iraakse IT-professionals in Nederland om elkaar te vinden, kennis te delen en samen te groeien.",
   manifest: "/site.webmanifest",
   icons: {
     icon: [
@@ -42,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} h-full antialiased`}>
+    <html lang="nl" className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-off-white text-charcoal">
         <MotionBoot />
         <Providers>{children}</Providers>

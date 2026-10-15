@@ -7,8 +7,8 @@ import { getAccessState } from "@/lib/access-state";
 import { getPublicProfiles } from "@/lib/members";
 
 export const metadata = {
-  title: "IN-IT | Iraqi tech professionals in the Netherlands",
-  description: "Meet the Iraqi tech community in the Netherlands. Discover public member profiles, share expertise, find connections and request to join IN-IT.",
+  title: "IN-IT | Iraakse IT-professionals in Nederland",
+  description: "Ontmoet de Iraakse IT-community in Nederland. Ontdek openbare ledenprofielen, deel kennis, leg contacten en vraag toegang aan tot IN-IT.",
 };
 
 export default async function Home() {

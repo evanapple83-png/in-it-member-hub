@@ -12,18 +12,17 @@ export default async function ContactPage() {
   return (
     <PageShell
       eyebrow="Contact"
-      title="Bring a question, partnership idea or community opportunity"
-      description="Email the IN-IT team and we will get back to you."
+      title="Een vraag, een idee voor samenwerking of een kans voor de community?"
+      description="Mail het IN-IT-team en we nemen contact met je op."
     >
       <div className="max-w-2xl rounded-3xl border border-charcoal/10 bg-white/72 p-8 shadow-sm">
         <p className="leading-7 text-charcoal/68">
-          Want to host an event, offer mentorship, sponsor a session or help shape the hub? Reach the IN-IT team and we will route the
-          conversation to the right volunteer.
+          Wil je een bijeenkomst organiseren, mentor worden, een sessie sponsoren of meebouwen aan de community? Mail het IN-IT-team en we brengen je in contact met de juiste vrijwilliger.
         </p>
         <Button asChild className="mt-6">
           <Link href={`mailto:${PRIVACY_CONTACT_EMAIL}`}>
             <Mail className="h-4 w-4" />
-            Email IN-IT
+            Mail IN-IT
           </Link>
         </Button>
       </div>

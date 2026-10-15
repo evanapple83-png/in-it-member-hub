@@ -39,7 +39,7 @@ export function MobileNav({ items, primary, secondary }: { items: Item[]; primar
       <button
         type="button"
         className="flex h-10 w-10 items-center justify-center rounded-full border border-white/55 bg-white/58 text-charcoal shadow-[0_18px_60px_rgba(16,54,92,0.12)] backdrop-blur-2xl"
-        aria-label={open ? "Close menu" : "Open menu"}
+        aria-label={open ? "Menu sluiten" : "Menu openen"}
         aria-expanded={open}
         aria-controls="mobile-nav-panel"
         onClick={() => {

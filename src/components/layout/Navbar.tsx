@@ -11,15 +11,15 @@ import { getDb, hasDatabase } from "@/db";
 import { admins } from "@/db/schema";
 
 const privateNavItems = [
-  { href: "/members", label: "Members" },
+  { href: "/members", label: "Leden" },
   { href: "/agenda", label: "Agenda" },
   { href: "/blog", label: "Blog" },
-  { href: "/communities", label: "Communities" },
-  { href: "/about", label: "About" },
+  { href: "/communities", label: "Groepen" },
+  { href: "/about", label: "Over IN-IT" },
   { href: "/contact", label: "Contact" },
 ];
 
-const publicNavItems = [{ href: "/members", label: "Members" }, { href: "/about", label: "About" }];
+const publicNavItems = [{ href: "/members", label: "Leden" }, { href: "/about", label: "Over IN-IT" }];
 
 async function isAdmin(userId?: string) {
   if (!userId || !hasDatabase()) return false;
@@ -33,8 +33,8 @@ export async function Navbar() {
   const approvedMember = await getApprovedCurrentMember();
   const admin = await isAdmin(session?.user?.id);
   const navItems = approvedMember
-    ? [...privateNavItems, ...(admin ? [{ href: "/admin", label: "Admin" }] : [])]
-    : [...publicNavItems, ...(admin ? [{ href: "/admin", label: "Admin" }] : [])];
+    ? [...privateNavItems, ...(admin ? [{ href: "/admin", label: "Beheer" }] : [])]
+    : [...publicNavItems, ...(admin ? [{ href: "/admin", label: "Beheer" }] : [])];
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 bg-transparent px-4 pt-4 sm:px-6 lg:px-8">
@@ -42,7 +42,7 @@ export async function Navbar() {
         <Link
           href="/"
           className="group flex items-center gap-3 rounded-full border border-white/55 bg-white/58 py-2 pl-2 pr-4 shadow-[0_18px_60px_rgba(16,54,92,0.12)] ring-1 ring-charcoal/5 backdrop-blur-2xl transition hover:bg-white/76"
-          aria-label="IN-IT Member Hub home"
+          aria-label="IN-IT — startpagina"
         >
           <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white shadow-md shadow-deep-blue/12 ring-1 ring-charcoal/10">
             <Image
@@ -74,20 +74,20 @@ export async function Navbar() {
           <Button asChild variant="ghost" size="sm" className="bg-white/40 hover:bg-white/72">
             <Link href={approvedMember ? "/profile" : "/inloggen"}>
               {approvedMember ? <Link2 className="h-4 w-4" /> : <KeyRound className="h-4 w-4" />}
-              {approvedMember ? "Profile" : "Sign in"}
+              {approvedMember ? "Profiel" : "Inloggen"}
             </Link>
           </Button>
           <Button asChild size="sm">
             <Link href={approvedMember ? "/vandaag" : "/request-access"}>
               <Sparkles className="h-4 w-4" />
-              {approvedMember ? "Explore" : "Request to join"}
+              {approvedMember ? "Naar de community" : "Toegang aanvragen"}
             </Link>
           </Button>
         </div>
         <MobileNav
           items={navItems}
-          secondary={approvedMember ? { href: "/profile", label: "Profile" } : { href: "/inloggen", label: "Sign in" }}
-          primary={approvedMember ? { href: "/vandaag", label: "Explore" } : { href: "/request-access", label: "Request to join" }}
+          secondary={approvedMember ? { href: "/profile", label: "Profiel" } : { href: "/inloggen", label: "Inloggen" }}
+          primary={approvedMember ? { href: "/vandaag", label: "Naar de community" } : { href: "/request-access", label: "Toegang aanvragen" }}
         />
       </nav>
     </header>
