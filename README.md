@@ -128,6 +128,13 @@ in development databases.
 
 ## Public profiles and membership
 
+The guest homepage introduces IN-IT, previews up to six opted-in public profiles, explains
+community benefits and joining steps, and links to `/request-access`. Approved members
+visiting `/` are redirected to `/vandaag`. Development previews label possible demo members;
+production homepage previews exclude seeded profiles with `@example.test` email addresses.
+No testimonials or membership statistics are fabricated. Public field restrictions apply
+to the homepage preview as well as the directory.
+
 Guests can browse `/members` and `/profile/[id]`. A public profile requires all three:
 
 - `visibility_status = 'approved'`.

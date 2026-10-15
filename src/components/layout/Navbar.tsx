@@ -56,10 +56,10 @@ export async function Navbar() {
           </span>
           <span className="leading-tight">
             <span className="block text-sm font-black tracking-tight text-charcoal">IN-IT</span>
-            <span className="hidden text-xs text-charcoal/55 sm:block">Iraqi Network of Information Technology</span>
+            <span className="hidden text-xs text-charcoal/55 xl:block">Iraqi Network of Information Technology</span>
           </span>
         </Link>
-        <div className="hidden items-center gap-1 rounded-full border border-white/55 bg-white/48 p-1.5 shadow-[0_18px_60px_rgba(16,54,92,0.12)] ring-1 ring-charcoal/5 backdrop-blur-2xl md:flex">
+        <div className="hidden items-center gap-1 rounded-full border border-white/55 bg-white/48 p-1.5 shadow-[0_18px_60px_rgba(16,54,92,0.12)] ring-1 ring-charcoal/5 backdrop-blur-2xl lg:flex">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -70,7 +70,7 @@ export async function Navbar() {
             </Link>
           ))}
         </div>
-        <div className="hidden items-center gap-2 rounded-full border border-white/55 bg-white/48 p-1.5 shadow-[0_18px_60px_rgba(16,54,92,0.12)] ring-1 ring-charcoal/5 backdrop-blur-2xl md:flex">
+        <div className="hidden items-center gap-2 rounded-full border border-white/55 bg-white/48 p-1.5 shadow-[0_18px_60px_rgba(16,54,92,0.12)] ring-1 ring-charcoal/5 backdrop-blur-2xl lg:flex">
           <Button asChild variant="ghost" size="sm" className="bg-white/40 hover:bg-white/72">
             <Link href={approvedMember ? "/profile" : "/inloggen"}>
               {approvedMember ? <Link2 className="h-4 w-4" /> : <KeyRound className="h-4 w-4" />}
@@ -78,16 +78,16 @@ export async function Navbar() {
             </Link>
           </Button>
           <Button asChild size="sm">
-            <Link href={approvedMember ? "/vandaag" : "/join"}>
+            <Link href={approvedMember ? "/vandaag" : "/request-access"}>
               <Sparkles className="h-4 w-4" />
-              {approvedMember ? "Explore" : "Use invite"}
+              {approvedMember ? "Explore" : "Request to join"}
             </Link>
           </Button>
         </div>
         <MobileNav
           items={navItems}
           secondary={approvedMember ? { href: "/profile", label: "Profile" } : { href: "/inloggen", label: "Sign in" }}
-          primary={approvedMember ? { href: "/vandaag", label: "Explore" } : { href: "/join", label: "Use invite" }}
+          primary={approvedMember ? { href: "/vandaag", label: "Explore" } : { href: "/request-access", label: "Request to join" }}
         />
       </nav>
     </header>

@@ -32,7 +32,7 @@ export async function getPublicMember(id: string): Promise<Member | null> {
 
 // FR-002/013: a profile visible to non-logged-in visitors — only when the member opted in
 // (approved + consent + at least one public field). The page renders only public fields.
-export async function getPublicProfiles(): Promise<PublicProfile[]> {
+export async function getPublicProfiles({ includeDemo = true }: { includeDemo?: boolean } = {}): Promise<PublicProfile[]> {
   let candidates: Member[];
   if (!hasDatabase()) candidates = approvedSeedMembers;
   else {
@@ -42,7 +42,8 @@ export async function getPublicProfiles(): Promise<PublicProfile[]> {
       .orderBy(desc(members.createdAt));
     candidates = rows.map(memberFromRow);
   }
-  return candidates.map(toPublicProfile).filter((member): member is PublicProfile => member !== null);
+  return candidates.filter((member) => includeDemo || !member.email.toLowerCase().endsWith("@example.test"))
+    .map(toPublicProfile).filter((member): member is PublicProfile => member !== null);
 }
 
 export async function getPublicProfile(id: string): Promise<PublicProfile | null> {

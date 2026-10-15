@@ -38,6 +38,16 @@ try {
   const privateValues = [`SecretRole${marker}`, `SecretCompany${marker}`, `SecretAbout${marker}`, `SecretSkill${marker}`, `${ids[0]}@example.test`];
   for (const value of privateValues) assert.ok(!html.includes(value), "Private value leaked in directory HTML or client payload");
 
+  const home = await fetch(base, { redirect: "manual" });
+  assert.equal(home.status, 200);
+  const landing = await home.text();
+  assert.ok(landing.includes(`/profile/${ids[0]}`), "Public member missing from homepage preview");
+  assert.ok(landing.includes('href="/request-access"'), "Homepage must offer access requests");
+  assert.ok(landing.includes('href="/members"'), "Homepage must link to public directory");
+  assert.ok(landing.includes('href="/join"'), "Existing invitations must remain usable");
+  for (const value of privateValues) assert.ok(!landing.includes(value), "Private value leaked to homepage");
+  for (const id of ids.slice(1)) assert.ok(!landing.includes(`Test ${id}`), "Excluded identity leaked to homepage");
+
   for (const prefix of ["/profile/", "/members/"]) {
     const response = await fetch(`${base}${prefix}${ids[0]}`, { redirect: "manual" });
     assert.equal(response.status, 200);
@@ -72,11 +82,14 @@ try {
   });
   const session = await (await signedRequest("/api/auth/session")).json();
   assert.equal(session.user?.id, "local-dev-member", "Enable local auth and run db:local:setup first");
+  const signedHome = await signedRequest("/");
+  assert.equal(signedHome.status, 307);
+  assert.equal(signedHome.headers.get("location"), "/vandaag");
   const fullDirectory = await (await signedRequest("/members")).text();
   assert.ok(fullDirectory.includes(`Test ${ids[1]}`), "Approved members must still see non-public members");
   const fullProfile = await (await signedRequest(`/members/${ids[0]}`)).text();
   assert.ok(fullProfile.includes(`SecretRole${marker}`), "Approved members must retain full profiles");
-  console.log("Public directory, field privacy, 404s, legacy links and signed-in access passed.");
+  console.log("Homepage, public directory, field privacy, 404s, legacy links and signed-in access passed.");
 } finally {
   if (ids.length) await client.query("delete from members where id = any($1::uuid[])", [ids]);
   await client.end();

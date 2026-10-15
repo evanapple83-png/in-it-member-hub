@@ -1,28 +1,22 @@
 import Link from "next/link";
-import { Link2, LockKeyhole } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function JoinCta() {
   return (
-    <section className="px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-gradient-to-br from-deep-blue via-date to-charcoal p-8 text-white shadow-2xl md:p-12">
-        <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
+    <section className="px-4 pb-20 pt-8 sm:px-6 lg:px-8">
+      <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] bg-deep-blue p-8 text-white sm:p-12 lg:p-16">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-32 h-96 w-96 rounded-full border-[50px] border-white/5" />
+        <div className="relative flex flex-col justify-between gap-8 lg:flex-row lg:items-center">
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-gold">
-              <LockKeyhole className="h-4 w-4" />
-              Review, consent, approval
-            </p>
-            <h2 className="mt-5 max-w-3xl text-4xl font-black tracking-tight">Join a hub where visibility is earned with trust.</h2>
-            <p className="mt-4 max-w-2xl text-white/68">
-              Entry starts with a 24-hour invite code from an admin. LinkedIn is used only after that to sign in and prefill your own profile.
-            </p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Your community is waiting</p>
+            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl">Find your people in tech.</h2>
+            <p className="mt-5 max-w-xl text-base leading-7 text-white/75">Bring your experience, your questions, and your ambition. Let’s build new connections together.</p>
           </div>
-          <Button asChild variant="secondary" size="lg">
-            <Link href="/join">
-              <Link2 className="h-5 w-5" />
-              Use invite code
-            </Link>
-          </Button>
+          <div className="flex shrink-0 flex-col items-start gap-4 lg:items-center">
+            <Button asChild variant="secondary" size="lg"><Link href="/request-access">Request to join <ArrowRight className="h-4 w-4" /></Link></Button>
+            <Link href="/join" className="text-sm font-medium text-white/80 underline underline-offset-4 hover:text-white">Already have an invite?</Link>
+          </div>
         </div>
       </div>
     </section>

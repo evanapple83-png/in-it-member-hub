@@ -12,6 +12,8 @@ export async function Footer() {
         { href: "/contact", label: "Contact" },
       ]
     : [
+        { href: "/members", label: "Explore members" },
+        { href: "/request-access", label: "Request to join" },
         { href: "/about", label: "About" },
         { href: "/join", label: "Sign in with invite" },
       ];
@@ -28,7 +30,7 @@ export async function Footer() {
             </div>
           </div>
           <p className="mt-4 max-w-md text-sm leading-6 text-charcoal/65">
-            A consent-first private community hub for Iraqi tech professionals in the Netherlands to connect, mentor and grow together.
+            Connecting Iraqi tech professionals in the Netherlands through shared expertise, new opportunities and a sense of belonging.
           </p>
         </div>
         <div>
