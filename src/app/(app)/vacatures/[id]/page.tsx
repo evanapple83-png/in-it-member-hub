@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireApprovedAccess } from "@/lib/access-state";
 import { getVacancy, safeExternalUrl } from "@/lib/zzpdock";
+import { VacancyDescription } from "@/components/vacancies/VacancyDescription";
 import { VacancyFacts } from "@/components/vacancies/VacancyFacts";
 import "../vacancies.css";
 
@@ -19,7 +20,7 @@ export default async function VacancyPage({ params }: { params: Promise<{ id: st
     <section className="panel"><h1>{v.display_title || v.title}</h1><VacancyFacts vacancy={v} />
       {url ? <a className="btn" href={url} target="_blank" rel="noopener noreferrer">Bekijk opdracht bij de aanbieder ↗</a> : null}
     </section>
-    <article className="panel"><h2>Over de opdracht</h2><p className="vacancy-description">{v.description || v.summary || "Geen omschrijving beschikbaar. Bekijk de opdracht bij de aanbieder voor meer informatie."}</p>
+    <article className="panel"><h2>Over de opdracht</h2><VacancyDescription description={v.description} summary={v.summary} />
       {v.required_skills?.length ? <><h3>Vaardigheden</h3><ul>{v.required_skills.map(skill => <li key={skill}>{skill}</li>)}</ul></> : null}
     </article><p className="muted">Bron: ZZPDock. Controleer de actuele voorwaarden bij de aanbieder.</p>
   </div>;
