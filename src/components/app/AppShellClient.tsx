@@ -46,6 +46,7 @@ export function AppShellClient({
     { href: "/communities", label: "Groepen", icon: "groups" },
     { href: "/agenda", label: "Agenda", icon: "cal", count: agendaCount },
     { href: "/blog", label: "Verhalen", icon: "book" },
+    { href: "/vacatures", label: "Vacatures", icon: "list" },
   ];
   const onOwnProfile = pathname === me.profileHref;
   const active = onOwnProfile ? -1 : activeIndex(nav, pathname);
@@ -160,6 +161,7 @@ export function AppShellClient({
           <Layer open={overlay?.kind === "me"} kind={sheet ? "sheet" : "pop"} style={overlay?.style} onClose={close} label="Mijn account">
             <MenuItem icon="user" title="Mijn profiel" hint="Zoals andere leden je zien" href={me.profileHref} onClick={close} />
             {sheet ? <MenuItem icon="book" title="Verhalen" hint="Wat leden schrijven" href="/blog" onClick={close} /> : null}
+            {sheet ? <MenuItem icon="list" title="Vacatures" hint="Opdrachten en markttarieven" href="/vacatures" onClick={close} /> : null}
             <MenuItem icon="pen" title="Instellingen" hint="Profiel, privacy en e-mail" href="/profile" onClick={close} />
             <MenuItem icon="info" title="Over IN-IT" hint="De publieke site en contact" href="/about" onClick={close} />
             {me.isAdmin ? <MenuItem icon="grid" title="Beheer" hint="Aanvragen, leden, uitnodigingen" href="/admin" onClick={close} /> : null}
