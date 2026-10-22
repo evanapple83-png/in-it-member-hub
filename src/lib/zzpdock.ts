@@ -31,9 +31,9 @@ export function parsePage(value: string | string[] | undefined) {
   return Number.isSafeInteger(page) ? page : 1;
 }
 
-async function request(path: string) {
+async function request(path: string, revalidate?: number) {
   const response = await fetch(`https://zzpdock.nl/api/v1/${path}`, {
-    cache: "no-store", signal: AbortSignal.timeout(15000), headers: { Accept: "application/json" },
+    ...(revalidate ? { next: { revalidate } } : { cache: "no-store" as const }), signal: AbortSignal.timeout(15000), headers: { Accept: "application/json" },
   });
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`ZZPDock request failed: ${response.status}`);
@@ -43,6 +43,22 @@ export async function getVacancies(page: number, filters: { q?: string; sector?:
   const params = new URLSearchParams({ page: String(page), per_page: "25" });
   for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value);
   return vacanciesSchema.parse(await request(`vacancies?${params}`));
+}
+// Cache only public API data; profile matching happens separately for each request.
+export async function getAllVacancies(filters: { q?: string; sector?: string; province?: string } = {}) {
+  const load = async (page: number) => {
+    const params = new URLSearchParams({ page: String(page), per_page: "100" });
+    for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value);
+    return vacanciesSchema.parse(await request(`vacancies?${params}`, 300));
+  };
+  const first = await load(1);
+  const items = [...first.items];
+  // Bound concurrent calls and fail the whole ranking if a page cannot be loaded.
+  for (let page = 2; page <= first.total_pages; page += 4) {
+    const pages = await Promise.all(Array.from({ length: Math.min(4, first.total_pages - page + 1) }, (_, i) => load(page + i)));
+    for (const result of pages) items.push(...result.items);
+  }
+  return [...new Map(items.map(item => [item.id, item])).values()];
 }
 export async function getMarketRates() {
   return ratesSchema.parse(await request("market-rates"));

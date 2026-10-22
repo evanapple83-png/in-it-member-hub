@@ -70,3 +70,9 @@
   .vacancy-pagination .btn { padding-inline: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .vacancy-card, .vacancy-market > summary > svg { transition: none; } }
+.vacancy-sort-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px; margin-bottom: 20px; }
+.vacancy-sort-options { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); }
+.vacancy-sort-options .btn { font-size: 13px; }
+.vacancy-sort-row p { font-size: 12px; max-width: 360px; }
+.vacancy-matches { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 10px 0; font-size: 11px; color: var(--muted); }
+.vacancy-match { background: var(--ok-soft); color: var(--ok); padding: 3px 8px; border-radius: 6px; font-weight: 550; }
