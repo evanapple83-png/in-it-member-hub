@@ -1,7 +1,8 @@
 # IN-IT Member Hub
 
 A community hub for Iraqi IT professionals in the Netherlands, with member profiles,
-communities, events, stories, invite-based membership and admin tools.
+communities, events, stories, vacancies with profile-based sorting, market-rate benchmarks,
+invite-based membership and admin tools.
 
 This is a full-stack Next.js application: pages and components provide the frontend,
 route handlers and server functions provide the backend, and Postgres stores the data.
@@ -56,6 +57,16 @@ HTTP driver for hosted URLs. If port 55432 is occupied, change the host port in
 public visibility settings are preserved. Run it again after pulling new migrations.
 It only accepts loopback database URLs; its migration tracking is for local development.
 Do not alternate it with `db:push` on the same database.
+
+If local sign-in reports **“Lokaal inloggen mislukt”**, make sure Docker is running and run:
+
+```bash
+npm run db:local:up
+npm run db:local:setup
+```
+
+A connection refusal at `127.0.0.1:55432` means Postgres is not reachable. A missing Docker
+socket means Docker must be started first. Keep `npm run dev` running while testing.
 
 Stop Postgres with `npm run db:local:down`; its Docker volume retains the data. Restart it
 with `npm run db:local:up`. Local CV files persist separately in `.local/member-cvs/`.
@@ -155,6 +166,66 @@ review requests in `/admin/requests` and manage invitations in `/admin/invites`.
 codes expire after 24 hours, are stored hashed, and are consumed during LinkedIn sign-in.
 Members finish onboarding and await approval before entering the private hub.
 
+## Vacancies and market rates
+
+Approved signed-in members can open **Vacatures** from the desktop sidebar or the mobile
+account menu. Both `/vacatures` and `/vacatures/[id]` use the private hub's access rules;
+guests must sign in, and pending members must complete approval.
+
+The overview includes:
+
+- Search by function, skill or client, plus sector and province filters.
+- Removable filter chips, a clear-all action and 25 results per page.
+- Shareable URL parameters: `q`, `sector`, `province`, `page` and `sort=relevance`.
+- **Standaard** ordering from the source, or **Relevant voor mij** to rank filtered results
+  against the current member's profile. Changing sort or submitting filters starts at page 1;
+  paging preserves filters and the selected sort order.
+- Cards with client, location, hours, duration and disclosed rates. Missing rates are shown
+  as **Tarief op aanvraag**.
+- A collapsed **Vergelijk markttarieven** section with sector averages, 25th–75th percentile
+  ranges, sample counts and role benchmarks with their sources.
+
+The detail page shows assignment facts, the full description when supplied, required skills
+and an external provider link. Flattened descriptions are split into paragraphs and recognized
+section headings while retaining the wording. If the description is empty, the summary is
+used; if both are empty, the page explains that no description is available.
+
+### Profile-based sorting
+
+**Relevant voor mij** uses keyword matching against profile `skills`, `canHelpWith`, `role`
+and `headline`. Skills carry more weight than role/headline terms; matches in vacancy titles
+and requirements carry more weight than matches in summaries, descriptions or sectors.
+Cards show up to three matching terms. Equal scores retain the source order, and assignments
+without direct matches remain in the results. Members without useful matching terms are
+prompted to complete their profile at `/profile`.
+
+Sorting loads every page of the filtered feed before ranking and paginating it, so a strong
+match can appear first even if the API originally returned it on a later page. Matching runs
+on the server for the current member; profile fields are not sent to ZZPDock. This is keyword
+ranking, not a suitability assessment or semantic/AI matching.
+
+### External data
+
+The application fetches these ZZPDock endpoints on the server:
+
+| Endpoint | Use |
+| --- | --- |
+| `https://zzpdock.nl/api/v1/vacancies` | Paged results and search/sector/province filters |
+| `https://zzpdock.nl/api/v1/vacancies/[id]` | Individual vacancy details |
+| `https://zzpdock.nl/api/v1/market-rates` | Sector rates and role benchmarks |
+
+No API key or additional environment variable is currently required. Internet access to
+`zzpdock.nl` is needed even when running the local demo. Responses are validated with Zod
+and requests have a 15-second timeout. Standard listing, detail and market-rate requests use
+`no-store`; relevance sorting fetches pages of 100 with at most four concurrent requests and
+caches the public API responses for five minutes. Personalized scores are computed per request.
+Vacancies are not imported into the application database.
+
+Vacancies and rates can fail independently, with retry links shown for unavailable data.
+Relevance sorting fails if any required API page fails, rather than ranking an incomplete
+feed. Missing vacancy records return 404. Provider content and availability can change;
+check the linked provider for current terms.
+
 ## LinkedIn and admin setup
 
 Configure a LinkedIn app with **Sign in with LinkedIn using OpenID Connect**, scopes
@@ -235,6 +306,16 @@ CV endpoints:
 | `npm run test:public-members` | Public directory, private fields and signed-in access |
 | `npm run test:cv:integration` | CV upload, replacement, access, removal and account cleanup |
 
+Vacancy unit checks can be run directly, without a database, development server or live API:
+
+```bash
+node --experimental-strip-types --test tests/vacancy-description.test.mjs tests/vacancy-relevance.test.mjs
+```
+
+These cover description formatting and wording preservation, profile ranking, technical-skill
+word boundaries, sort URLs, fetching all result pages and handling incomplete feeds. API calls
+in the relevance tests are mocked. `npx tsc --noEmit` runs a standalone TypeScript check.
+
 Integration checks require the local database, seed data and development server at
 `http://localhost:3000`, with local login enabled. CV integration checks also require an
 empty `CV_BLOB_READ_WRITE_TOKEN` so they use local file storage. They create temporary
@@ -251,12 +332,16 @@ can retain their usual spelling; member-written profile content uses the member'
 
 - `src/app/(public)/`: public pages and public profile details.
 - `src/app/(directory)/`: directory routes with guest and signed-in views.
-- `src/app/(app)/`: private member hub, events, communities, stories and profile settings.
+- `src/app/(app)/`: private member hub, events, communities, stories, vacancies and profile settings.
 - `src/app/(auth)/`: sign-in, joining, onboarding and waiting screens.
 - `src/app/admin/`: admin pages.
 - `src/app/api/`: HTTP API handlers.
 - `src/components/`: UI components.
 - `src/lib/`: authentication, access rules, queries, validation and storage helpers.
+- `src/app/(app)/vacatures/` and `src/components/vacancies/`: vacancy overview, details and UI.
+- `src/lib/zzpdock.ts`: validated external API requests and paged feed loading.
+- `src/lib/vacancy-filters.ts`, `vacancy-relevance.ts` and `vacancy-description.ts`: vacancy
+  filter URLs, profile matching and description formatting.
 - `src/db/` and `drizzle/`: database schema, mapping, SQL migrations and seeds.
 - `tests/`: validation, access and integration checks.
 
@@ -273,12 +358,17 @@ through server functions; browser interactions use API handlers for changes.
 5. Configure the public photo/cover Blob store and separate private CV Blob store.
 6. Configure Resend and `EMAIL_FROM` if activation and event emails should be delivered.
 7. Set the first admin's verified email in `BOOTSTRAP_ADMIN_EMAILS`, deploy, and sign in.
-8. Test an invitation, onboarding, approval, public field visibility, and private CV
+8. Verify outbound access to ZZPDock and test vacancy filters, details, market rates and
+   **Relevant voor mij** with an approved member. Confirm guests cannot view these pages.
+9. Test an invitation, onboarding, approval, public field visibility, and private CV
    upload/download/removal. Confirm guests and other members cannot download a CV.
 
 ## Current limitations
 
-- Member matching and search are keyword-based.
+- Member matching, vacancy relevance and search are keyword-based; vacancy ranking does
+  not infer synonyms, parse CVs or evaluate all assignment requirements.
+- Vacancy content, available fields and market rates depend on ZZPDock availability.
+  The first relevance sort for uncached filters loads the complete feed and may be slower.
 - Hosted migrations are applied explicitly; automatic hosted migration tracking is not set up.
 - Photo and cover uploads require Vercel Blob even during local development.
 - CV storage and permissions have local integration coverage; hosted storage requires the
